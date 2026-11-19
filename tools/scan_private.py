@@ -8,10 +8,12 @@ Exit codes: 0 clean, 1 hit, 2 denylist missing or empty, 3 usage or git error.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 import subprocess
 import sys
+import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -26,7 +28,7 @@ _NORMALIZE = re.compile(r"[-_.\s]+")
 
 
 def normalize(s: str) -> str:
-    return _NORMALIZE.sub("", s.lower())
+    return _NORMALIZE.sub("", unicodedata.normalize("NFKC", s).lower())
 
 
 @dataclass(frozen=True)
@@ -53,9 +55,10 @@ def load_denylist(path: Path) -> list[Rule]:
         if line.startswith("re:"):
             rules.append(Rule(f"D{i}", regex=re.compile(line[3:])))
         else:
-            term = normalize(line)
-            if term:
-                rules.append(Rule(f"D{i}", term=term))
+            for variant in dict.fromkeys((line, json.dumps(line)[1:-1])):
+                term = normalize(variant)
+                if term:
+                    rules.append(Rule(f"D{i}", term=term))
     return rules
 
 
@@ -196,6 +199,8 @@ def scan_history(rules: list[Rule]) -> list[Hit]:
     hits = scan_commits(shas, rules)
     refs = _git("for-each-ref", "--format=%(refname)").decode()
     hits += scan_lines("refs", refs, rules)
+    tags = _git("for-each-ref", "--format=%(refname)%0a%(contents)", "refs/tags").decode("utf-8", "replace")
+    hits += scan_lines("tag messages", tags, rules)
     return hits
 
 

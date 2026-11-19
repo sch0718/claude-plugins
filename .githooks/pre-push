@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
-root="$(git rev-parse --show-toplevel)"
+root="$(cd "$(dirname "$0")/.." && pwd)"
+while read -r local_ref local_sha remote_ref remote_sha; do
+  printf '%s\n%s\n' "$local_ref" "$remote_ref"
+done | "$root/tools/scan-private" --stdin
 "$root/tools/scan-private" --history
 "$root/tools/scan-private" --all

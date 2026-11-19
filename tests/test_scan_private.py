@@ -125,6 +125,40 @@ class ScanPrivateTest(unittest.TestCase):
         self.assertEqual(run(["--all"], self.denylist, cwd=repo).returncode, 0)
         self.assertEqual(run(["--history"], self.denylist, cwd=repo).returncode, 0)
 
+    def test_korean_term_in_nfd_and_json_escape(self):
+        import json as _json
+        import unicodedata
+        term = "가나" + "다라"
+        self.denylist.write_text(term + "\n", encoding="utf-8")
+        self.assertEqual(self.scan_text(unicodedata.normalize("NFD", term) + "\n").returncode, 1)
+        self.assertEqual(self.scan_text(_json.dumps(term) + "\n").returncode, 1)
+        self.assertEqual(self.scan_text("ＡＣＭＥ\n").returncode, 0)
+
+    def test_history_includes_annotated_tag_message(self):
+        repo = Path(tempfile.mkdtemp())
+        git(repo, "init", "-q", "-b", "main")
+        (repo / "a.txt").write_text("clean\n", encoding="utf-8")
+        git(repo, "add", ".")
+        git(repo, "commit", "-q", "-m", "init")
+        git(repo, "tag", "-a", "v1", "-m", f"release for {TERM}")
+        self.assertEqual(run(["--history"], self.denylist, cwd=repo).returncode, 1)
+
+    def test_pre_push_hook_checks_remote_ref_names(self):
+        repo = Path(tempfile.mkdtemp())
+        git(repo, "init", "-q", "-b", "main")
+        hook = ROOT / ".githooks" / "pre-push"
+        stdin = f"refs/heads/main abc refs/heads/{TERM}-x 000\n"
+        env = {**os.environ, "CLAUDE_PLUGINS_DENYLIST": str(self.denylist)}
+        (repo / "a.txt").write_text("clean\n", encoding="utf-8")
+        git(repo, "add", ".")
+        git(repo, "commit", "-q", "-m", "init")
+        res = subprocess.run(["bash", str(hook), "origin", "url"], cwd=repo, input=stdin, text=True,
+                             capture_output=True, env=env)
+        self.assertNotEqual(res.returncode, 0)
+        ok = subprocess.run(["bash", str(hook), "origin", "url"], cwd=repo, input="refs/heads/main abc refs/heads/main 000\n",
+                            text=True, capture_output=True, env=env)
+        self.assertEqual(ok.returncode, 0, ok.stdout + ok.stderr)
+
     def test_range_includes_root_commit(self):
         repo = Path(tempfile.mkdtemp())
         git(repo, "init", "-q", "-b", "main")
