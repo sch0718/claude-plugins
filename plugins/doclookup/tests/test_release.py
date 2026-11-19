@@ -16,7 +16,7 @@ def test_versions_match():
     assert market["name"] == "sch0718-plugins"
     [entry] = [p for p in market["plugins"] if p["name"] == "doclookup"]
     assert (plugin["name"], entry["name"], entry["source"]) == ("doclookup", "doclookup", "./plugins/doclookup")
-    assert __version__ == plugin["version"] == entry["version"] == project["project"]["version"] == "0.1.5"
+    assert __version__ == plugin["version"] == entry["version"] == project["project"]["version"] == "0.1.6"
 
 
 def test_readme_covers_every_command_and_install():

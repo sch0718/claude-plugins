@@ -123,6 +123,40 @@ def test_cli_search_type_and_in(repo, capsys):
     assert run(capsys, [*repo, "search", "겸직", "--any", "a_b"])[1].splitlines()[0] == "2건: docs/지침.md 2"
 
 
+@pytest.mark.parametrize("terms, any_terms", [
+    (["겸직", "a_b"], "a_b"),
+    (["겸직", "a_b", "확정"], "a_b,확정"),
+    (["겸직", "a_b", "--any", "확정"], "a_b,확정"),
+])
+def test_cli_search_multiple_terms_match_any(repo, capsys, terms, any_terms):
+    expected = run(capsys, [*repo, "search", "겸직", "--any", any_terms])
+    assert expected[0] == 0
+    assert run(capsys, [*repo, "search", *terms]) == expected
+
+
+def test_cli_search_help(capsys):
+    with pytest.raises(SystemExit) as exc:
+        main(["search", "-h"])
+    assert exc.value.code == 0
+    out = " ".join(capsys.readouterr().out.split())
+    assert "낱말 [낱말 ...]" in out
+    assert "여러 낱말" in out and "어느 하나라도" in out and "--any" in out
+    assert "따옴표" in out and "낱말은 옵션 앞에" in out
+
+
+def test_cli_search_multiple_terms_before_filter(repo, capsys):
+    expected = run(capsys, [*repo, "search", "겸직", "--any", "a_b", "--in", "docs"])
+    assert expected[0] == 0
+    assert run(capsys, [*repo, "search", "겸직", "a_b", "--in", "docs"]) == expected
+
+
+def test_cli_search_rejects_terms_after_filter(repo, capsys):
+    with pytest.raises(SystemExit) as exc:
+        main([*repo, "search", "겸직", "--in", "docs", "a_b"])
+    assert exc.value.code == 2
+    assert "unrecognized arguments: a_b" in capsys.readouterr().err
+
+
 def test_cli_trigram_notice(repo, capsys, monkeypatch):
     monkeypatch.setattr(index, "trigram_available", lambda: False)
     code, out, _ = run(capsys, [*repo, "search", "변경 책임자"])
