@@ -1,0 +1,6 @@
+{
+  "name": "sch0718-plugins",
+  "metadata": { "description": "sch0718의 Claude Code 플러그인 모음" },
+  "owner": { "name": "sch0718", "url": "https://github.com/sch0718" },
+  "plugins": []
+}

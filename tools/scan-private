@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+self="$0"
+while [ -L "$self" ]; do
+  target=$(readlink "$self")
+  case "$target" in
+    /*) self="$target" ;;
+    *) self="$(cd "$(dirname "$self")" && pwd)/$target" ;;
+  esac
+done
+here="$(cd "$(dirname "$self")" && pwd)"
+
+for candidate in python3 python3.13 python3.12 python3.11; do
+  if command -v "$candidate" >/dev/null 2>&1 &&
+    "$candidate" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)' >/dev/null 2>&1; then
+    exec "$candidate" -I "$here/scan_private.py" "$@"
+  fi
+done
+echo "Python 3.11 이상이 필요합니다." >&2
+exit 1
