@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="420" viewBox="0 0 960 420" role="img" aria-labelledby="t d">
+<title id="t">doclookup — 문서 질문에 파일:줄로 답하는 Claude Code 플러그인</title>
+<desc id="d">문서 질문이 기기의 저장소별 설정(&lt;이름&gt;.toml)을 거쳐 마크다운은 제목 단위 절로 색인하고 지정한 텍스트는 줄 단위로 찾아, search·impact·refs·links로 쓰인 곳과 바꾸면 같이 고칠 곳, 가리키는 곳과 깨진 링크를 확인하는 흐름</desc>
+<style>text{font-family:'Pretendard Variable',Pretendard,'Apple SD Gothic Neo','Noto Sans KR',system-ui,sans-serif}</style>
+<defs><marker id="ah-2DD4BF" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#2DD4BF"/></marker><marker id="ah-6B7078" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#6B7078"/></marker></defs>
+<rect x="1" y="1" width="958" height="418" rx="28" fill="#0E0F11" stroke="#2A2D33"/>
+<rect x="40" y="36" width="52" height="52" rx="12" fill="#D9F99D"/>
+<rect x="49" y="46" width="30" height="4" rx="2" fill="#18181B" opacity=".45"/>
+<rect x="75" y="61" width="8" height="4" rx="2" fill="#18181B" opacity=".45"/>
+<circle cx="62" cy="63" r="10" fill="none" stroke="#18181B" stroke-width="3.5"/>
+<rect x="56" y="61" width="12" height="4" rx="2" fill="#18181B"/>
+<path d="M69.5 70.5L78 79" stroke="#18181B" stroke-width="4.5" stroke-linecap="round"/>
+<text x="108" y="66" font-size="30" font-weight="800" fill="#F2F3F5">doclookup</text>
+<text x="108" y="88" font-size="13" fill="#A4A8B0">Claude Code 플러그인</text>
+<text x="40" y="132" font-size="17" font-weight="700" fill="#A4A8B0">문서를 통째로 읽지 않고 절 단위로 찾아 파일:줄로 받는다</text>
+<rect x="40" y="232" width="178" height="76" rx="14" fill="#17191D" stroke="#2A2D33" stroke-width="1.5"/><text x="56" y="266" font-size="16" font-weight="700" fill="#F2F3F5">문서 질문</text><text x="56" y="287" font-size="12.5" fill="#A4A8B0">용어·ID·링크가 쓰인 곳</text>
+<rect x="254" y="232" width="170" height="76" rx="14" fill="#17191D" stroke="#2A2D33" stroke-width="1.5"/><text x="270" y="266" font-size="16" font-weight="700" fill="#F2F3F5">저장소별 설정</text><text x="270" y="287" font-size="12.5" fill="#A4A8B0">설정 폴더의 &lt;이름&gt;.toml</text>
+<text x="460" y="178" font-size="12" font-weight="600" fill="#A4A8B0">색인</text>
+<rect x="460" y="192" width="190" height="64" rx="14" fill="#17191D" stroke="#2A2D33" stroke-width="1.5"/><text x="476" y="220" font-size="16" font-weight="700" fill="#F2F3F5">마크다운</text><text x="476" y="241" font-size="12.5" fill="#A4A8B0">→ 제목 단위 절 색인</text>
+<rect x="460" y="284" width="190" height="64" rx="14" fill="#17191D" stroke="#2A2D33" stroke-width="1.5"/><text x="476" y="312" font-size="16" font-weight="700" fill="#F2F3F5">지정한 텍스트</text><text x="476" y="333" font-size="12.5" fill="#A4A8B0">→ 줄 단위 검색</text>
+<rect x="736" y="174" width="184" height="64" rx="14" fill="#0F2A27" stroke="#2DD4BF" stroke-width="1.5"/><text x="752" y="202" font-size="16" font-weight="700" fill="#2DD4BF">search</text><text x="752" y="223" font-size="12.5" fill="#A4A8B0">쓰인 곳 파일:줄</text>
+<rect x="736" y="244" width="184" height="64" rx="14" fill="#17191D" stroke="#2A2D33" stroke-width="1.5"/><text x="752" y="272" font-size="16" font-weight="700" fill="#F2F3F5">impact</text><text x="752" y="293" font-size="12.5" fill="#A4A8B0">바꾸면 같이 고칠 곳</text>
+<rect x="736" y="314" width="184" height="64" rx="14" fill="#17191D" stroke="#2A2D33" stroke-width="1.5"/><text x="752" y="342" font-size="16" font-weight="700" fill="#F2F3F5">refs · links</text><text x="752" y="363" font-size="12.5" fill="#A4A8B0">가리키는 곳·깨진 링크</text>
+<path d="M218 270 C230 270 236 270 248 270" fill="none" stroke="#6B7078" stroke-width="2" stroke-linecap="round" marker-end="url(#ah-6B7078)"/>
+<path d="M424 256 C438 256 440 224 454 224" fill="none" stroke="#6B7078" stroke-width="2" stroke-linecap="round" marker-end="url(#ah-6B7078)"/>
+<path d="M424 284 C438 284 440 316 454 316" fill="none" stroke="#6B7078" stroke-width="2" stroke-linecap="round" marker-end="url(#ah-6B7078)"/>
+<path d="M650 224 C672 224 668 270 690 270" fill="none" stroke="#6B7078" stroke-width="2" stroke-linecap="round"/>
+<path d="M650 316 C672 316 668 270 690 270" fill="none" stroke="#6B7078" stroke-width="2" stroke-linecap="round"/>
+<path d="M690 270 C712 270 710 206 730 206" fill="none" stroke="#2DD4BF" stroke-width="2" stroke-linecap="round" marker-end="url(#ah-2DD4BF)"/>
+<path d="M690 270 C706 270 712 276 730 276" fill="none" stroke="#6B7078" stroke-width="2" stroke-linecap="round" marker-end="url(#ah-6B7078)"/>
+<path d="M690 270 C712 270 710 346 730 346" fill="none" stroke="#6B7078" stroke-width="2" stroke-linecap="round" marker-end="url(#ah-6B7078)"/>
+<text x="40" y="396" font-size="13" fill="#A4A8B0">작업 저장소에는 아무것도 만들지 않음 · 색인은 캐시에 두고 파일이 바뀌면 다시 만듦 · 네트워크 호출 없음</text>
+</svg>

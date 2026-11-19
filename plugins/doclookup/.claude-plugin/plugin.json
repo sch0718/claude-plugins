@@ -1,0 +1,8 @@
+{
+  "name": "doclookup",
+  "version": "0.1.5",
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "description": "저장소 문서를 절 단위로 색인해 용어·ID·링크가 쓰인 곳과 바꾸면 같이 고칠 곳을 파일:줄로 돌려준다.",
+  "author": { "name": "sch0718" },
+  "keywords": ["docs", "search", "markdown", "korean"]
+}

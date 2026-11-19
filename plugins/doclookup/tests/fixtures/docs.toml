@@ -1,0 +1,16 @@
+match = ["docs"]
+
+[files]
+markdown = ["docs/**/*.md"]
+text = ["tools/**/*.py"]
+
+[frontmatter]
+columns = ["type", "tags"]
+
+[[aliases]]
+canonical = "파트장"
+variants = ["파트 리더"]
+
+[roles]
+names = ["변경 책임자", "시스템 책임자", "변경관리자", "변경수행자", "운영 적용 승인 책임자"]
+suspect = '(?:[가-힣]+ ?)?(?:승인자|검증자|책임자|승인권자)'

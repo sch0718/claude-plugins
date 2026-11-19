@@ -1,0 +1,29 @@
+#!/bin/sh
+# Python 3.11 이상을 찾아 doclookup을 실행한다. 런타임에 Python을 내려받지 않는다.
+
+self=$0
+while [ -L "$self" ]; do
+  target=$(readlink "$self")
+  case $target in
+    /*) self=$target ;;
+    *) self=$(dirname "$self")/$target ;;
+  esac
+done
+root=$(cd -P "$(dirname "$self")/../../.." && pwd) || exit 2
+
+PYTHONPATH=$root/src
+export PYTHONPATH
+
+if command -v uv >/dev/null 2>&1 &&
+  uv run --no-project --no-python-downloads --python ">=3.11" \
+    python -c 'import sys; assert sys.version_info >= (3, 11)' >/dev/null 2>&1; then
+  exec uv run --no-project --no-python-downloads --python ">=3.11" python -P -m doclookup "$@"
+fi
+
+if command -v python3 >/dev/null 2>&1 &&
+  python3 -c 'import sys; assert sys.version_info >= (3, 11)' >/dev/null 2>&1; then
+  exec python3 -P -m doclookup "$@"
+fi
+
+echo "doclookup: Python 3.11 이상이 필요하다" >&2
+exit 2

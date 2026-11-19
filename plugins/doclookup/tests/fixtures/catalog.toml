@@ -1,0 +1,26 @@
+match = ["catalog"]
+anchor = "github"
+
+[files]
+markdown = ["**/*.md"]
+
+[frontmatter]
+columns = ["type", "screen_id"]
+
+[[ids]]
+name = "기능 ID"
+pattern = 'SCR-[A-Z]+(?:-[A-Z]+)*-\d{2}-\d{2}'
+defined_by = "table_first_cell"
+in = ["product/*/요구사항.md"]
+
+[[ids]]
+name = "화면 ID"
+pattern = 'SCR-[A-Z]+(?:-[A-Z]+)*'
+defined_by = "frontmatter:screen_id"
+
+[[ids]]
+name = "결정"
+pattern = 'D-\d{3}'
+defined_by = "heading"
+scope = 'product/([^/]+)/'
+in = ["product/*/decision-log.md"]
