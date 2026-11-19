@@ -1,6 +1,6 @@
 [project]
 name = "doclookup"
-version = "0.1.5"
+version = "0.1.6"
 description = "저장소 문서를 절 단위로 색인해 파일:줄로 찾아 주는 개인용 Claude Code 플러그인"
 requires-python = ">=3.11"
 dependencies = []

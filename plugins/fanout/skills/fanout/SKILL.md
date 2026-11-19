@@ -68,6 +68,7 @@ description: 이 대화에서 정리된 「고쳐야 할 것들」을 서로 겹
 
 ## 진행 방식 (사용자 지시)
 - `/superpowers:using-superpowers`로 시작한다.
+- **문서 찾기:** <문서·위키를 조사하는 작업이면 이 세션의 지침(전역·프로젝트 `CLAUDE.md`/`AGENTS.md`)이 정한 문서 찾기 명령(예: doclookup)을 그 형태 그대로 적는다. 정해진 명령이 없으면 이 줄을 지운다>
 - **설계·계획:** 큰 작업은 brainstorming으로 설계(spec), writing-plans로 구현계획(plan)을 쓴다. 작은 작업은 설계와 계획을 짧은 문서 하나로 쓴다. 각 문서는 `codex-review` 스킬(`--doc`)로 검토하고 지적은 `/cascade-fix:cascade-fix`로 고친다. 검토는 최대 2회, 2회차에는 Critical만 고친다. 지적이 좁은 경계 사례로 옮겨 가면 2회 전이라도 끝낸다.
 - **구현:** Codex CLI로 한다. 워크트리 루트에서 백그라운드로 실행하고 완료 알림을 기다린다(폴링하지 않는다).
   `codex exec -m gpt-6.1-sol -c model_reasoning_effort=high -s workspace-write "<계획 파일 경로와 할 일>" < /dev/null`

@@ -79,7 +79,7 @@ def _where(args) -> dict[str, str]:
 
 
 def run_search(ix: Index, args) -> int:
-    terms = [args.query, *(t for t in (args.any or "").split(",") if t.strip())]
+    terms = [*args.terms, *(t for t in (args.any or "").split(",") if t.strip())]
     hits = query.ranked(ix.cfg, query.search(ix, terms, in_glob=args.in_glob, where=_where(args), exact=args.exact))
     counts = Counter(hit.file for hit in hits)
     print(f"{len(hits)}건" + (": " + _summary(counts, args.files, "파일") if hits else ""))
@@ -262,7 +262,8 @@ def _parser() -> argparse.ArgumentParser:
     commands = parser.add_subparsers(dest="command", metavar="명령")
 
     sub = commands.add_parser("search", parents=[common, listing], help="낱말과 그 표기 묶음이 쓰인 곳")
-    sub.add_argument("query")
+    sub.add_argument("terms", nargs="+", metavar="낱말",
+                     help="띄어 쓴 여러 낱말은 어느 하나라도 들어간 줄을 찾는다(--any와 같다). 띄어쓰기가 든 구절은 따옴표로 묶는다. 낱말은 옵션 앞에 모아서 준다")
     sub.add_argument("--any", help="함께 찾을 낱말(쉼표로 구분)")
     sub.add_argument("--in", dest="in_glob", help="이 경로(폴더 또는 glob) 안에서만 찾는다")
     sub.add_argument("--type", help="프론트매터 type이 이 값인 파일만")
