@@ -44,7 +44,8 @@ def plan_sessions(manifest: dict, source_dir: Path, target_dir: Path, projects_r
         if dst is None:
             if archived:
                 continue
-            if projects_root is not None and not transcript_exists(projects_root, s.get("cliSessionId")):
+            cli_ids = [s.get("cliSessionId"), *(s.get("priorCliSessionIds") or [])]
+            if projects_root is not None and not any(transcript_exists(projects_root, c) for c in cli_ids):
                 actions.append(Action("skip", sid, "대화 기록 파일 없음"))
                 continue
             actions.append(Action("add", sid, "대상에 없음"))

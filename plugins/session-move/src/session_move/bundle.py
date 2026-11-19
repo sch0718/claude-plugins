@@ -415,15 +415,15 @@ def _export_repos(paths: Paths, tar: _Tar, sessions: list[dict], sdir: Path, rul
 
 def _export_memory(paths: Paths, tar: _Tar, sessions: list[dict], words, company_present: bool,
                    include_company: bool, report: Report) -> None:
-    for s in sessions:
-        for p in _transcript_paths(paths, [s["cliSessionId"]]):
-            mem = p.parent / "memory"
-            if mem.is_dir():
-                for f in iter_files(mem):
-                    if words and words.file_status(f) != "clean":
-                        report.excluded["회사 내용 메모리 파일"] += 1
-                        continue
-                    tar.add_file(f"memory/projects/{p.parent.name}/memory/{f.relative_to(mem).as_posix()}", f)
+    mems = dict.fromkeys(p.parent / "memory" for s in sessions
+                         for p in _transcript_paths(paths, [s["cliSessionId"], *s["priorCliSessionIds"]]))
+    for mem in mems:
+        if mem.is_dir():
+            for f in iter_files(mem):
+                if words and words.file_status(f) != "clean":
+                    report.excluded["회사 내용 메모리 파일"] += 1
+                    continue
+                tar.add_file(f"memory/projects/{mem.parent.name}/memory/{f.relative_to(mem).as_posix()}", f)
     data = paths.home / ".agentmemory" / "data"
     if not data.is_dir():
         return

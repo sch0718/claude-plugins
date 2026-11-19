@@ -230,6 +230,13 @@ class ExportTest(BundleCase):
         self.assertEqual(code, 0, out)
         self.assertIn("회사 판정 없이", out.splitlines()[0])
 
+    def test_bundle_export_works_without_denylist(self):
+        (self.home / ".config" / "claude-plugins" / "denylist.txt").unlink()
+        code, out = self.export("--skip", "memory")
+        self.assertEqual(code, 0, out)
+        self.assertIn("금지어 목록 없음", out)
+        self.assertNotIn(f"sessions/{S_CO}.json", members(self.bundle))
+
     def test_bundle_export_refuses_with_empty_company_config(self):
         cfg = self.home / ".session-move" / "config.toml"
         for text in ("", 'orgs = []\nrepos = []\npath_prefixes = []\n'):

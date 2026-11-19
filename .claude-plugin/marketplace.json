@@ -46,7 +46,7 @@
     {
       "name": "session-move",
       "source": "./plugins/session-move",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "description": "Claude 데스크톱 앱 Code 탭의 세션·하위 세션·예약 작업·backlog·사이드바를 같은 기기의 다른 계정이나 다른 기기로 옮긴다. 다른 기기용 번들은 회사 데이터를 기본으로 뺀다.",
       "category": "development"
     }

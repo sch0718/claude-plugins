@@ -108,6 +108,18 @@ class SessionsTest(ApplyCase):
         self.assertIn("대화 기록", actions[fh.S_CHILD].reason)
         self.assertEqual(actions[fh.S_PARENT].kind, "add")
 
+    def test_add_when_only_prior_cli_transcript_exists(self):
+        for p in (self.home / ".claude" / "projects").rglob("cli-child.jsonl"):
+            p.unlink()
+        rec = json.loads((self.src / f"{fh.S_CHILD}.json").read_text())
+        rec["cliSessionId"] = None
+        rec["priorCliSessionIds"] = ["cli-child-prior"]
+        fh.write_json(self.src / f"{fh.S_CHILD}.json", rec)
+        fh.transcript(self.home, rec["cwd"], "cli-child-prior")
+        m = build_manifest(self.paths, fh.SCOPE_A, {"sessions"})
+        actions = {a.session_id: a for a in plan_sessions(m, self.src, self.dst, self.paths.projects_root)}
+        self.assertEqual(actions[fh.S_CHILD].kind, "add")
+
 
 class MergeTest(unittest.TestCase):
     def test_merge_schedules_adds_missing_keeps_run_history(self):
