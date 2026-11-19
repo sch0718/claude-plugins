@@ -1,0 +1,8 @@
+테스트는 통과했지만 두 함수의 계산이 틀렸습니다.
+
+Review comment:
+
+- [P2] add가 빼기를 한다 — calc.py:2-2
+  Warning: add(a, b)가 a - b를 돌려준다. add(2, 3)이 -1이다.
+- [P2] mul이 더하기를 한다 — calc.py:14-14
+  Warning: mul(a, b)가 a + b를 돌려준다. mul(2, 3)이 5다.

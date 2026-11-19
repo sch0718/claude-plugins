@@ -1,0 +1,20 @@
+{
+  "jobs": [
+    {
+      "id": "r1-01:a",
+      "label": "r1-01 a",
+      "model": "claude-sonnet-5-5",
+      "effort": "low",
+      "kind": "worker",
+      "promptPath": "prompts/r1-01-a.md"
+    },
+    {
+      "id": "r1-01:b",
+      "label": "r1-01 b",
+      "model": "claude-haiku-5-5",
+      "effort": "low",
+      "kind": "worker",
+      "promptPath": "prompts/r1-01-b.md"
+    }
+  ]
+}

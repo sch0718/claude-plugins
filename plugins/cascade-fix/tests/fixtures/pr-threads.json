@@ -1,0 +1,151 @@
+{
+  "data": {
+    "repository": {
+      "pullRequest": {
+        "reviewThreads": {
+          "nodes": [
+            {
+              "id": "T1",
+              "isResolved": true,
+              "isOutdated": false,
+              "path": "src/a.py",
+              "line": 10,
+              "startLine": null,
+              "comments": {
+                "nodes": [
+                  {
+                    "id": "C1",
+                    "databaseId": 1,
+                    "author": {
+                      "login": "reviewer1"
+                    },
+                    "body": "**Warning**: 이미 해결된 지적",
+                    "createdAt": "2026-10-16T01:00:00Z",
+                    "pullRequestReview": {
+                      "id": "RV1",
+                      "state": "SUBMITTED"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "id": "T2",
+              "isResolved": false,
+              "isOutdated": false,
+              "path": "src/b.py",
+              "line": 42,
+              "startLine": null,
+              "comments": {
+                "nodes": [
+                  {
+                    "id": "C2",
+                    "databaseId": 2,
+                    "author": {
+                      "login": "reviewer1"
+                    },
+                    "body": "⚠️ **Warning**: 예외를 삼키고 있습니다\n\n**확인한 내용**: b.py:42 의 except 가 로그 없이 pass 합니다.\n\n**제안**: 로그를 남기세요.",
+                    "createdAt": "2026-10-16T01:00:00Z",
+                    "pullRequestReview": {
+                      "id": "RV2",
+                      "state": "SUBMITTED"
+                    }
+                  },
+                  {
+                    "id": "C3",
+                    "databaseId": 3,
+                    "author": {
+                      "login": "sch0718"
+                    },
+                    "body": "확인했습니다. 수정하겠습니다.",
+                    "createdAt": "2026-10-16T01:00:00Z",
+                    "pullRequestReview": {
+                      "id": "RV3",
+                      "state": "SUBMITTED"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "id": "T3",
+              "isResolved": false,
+              "isOutdated": false,
+              "path": "src/c.py",
+              "line": 7,
+              "startLine": null,
+              "comments": {
+                "nodes": [
+                  {
+                    "id": "C4",
+                    "databaseId": 4,
+                    "author": {
+                      "login": "sch0718"
+                    },
+                    "body": "**Critical**: 내가 단 코멘트",
+                    "createdAt": "2026-10-16T01:00:00Z",
+                    "pullRequestReview": {
+                      "id": "RV4",
+                      "state": "SUBMITTED"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "id": "T4",
+              "isResolved": false,
+              "isOutdated": true,
+              "path": "src/d.py",
+              "line": null,
+              "startLine": 20,
+              "comments": {
+                "nodes": [
+                  {
+                    "id": "C5",
+                    "databaseId": 5,
+                    "author": {
+                      "login": "reviewer2"
+                    },
+                    "body": "💡 **Suggestion**: 이름을 바꾸면 좋겠습니다",
+                    "createdAt": "2026-10-16T01:00:00Z",
+                    "pullRequestReview": {
+                      "id": "RV5",
+                      "state": "SUBMITTED"
+                    }
+                  },
+                  {
+                    "id": "C6",
+                    "databaseId": 6,
+                    "author": {
+                      "login": "sch0718"
+                    },
+                    "body": "다음 PR에서 하겠습니다.",
+                    "createdAt": "2026-10-16T01:00:00Z",
+                    "pullRequestReview": {
+                      "id": "RV6",
+                      "state": "SUBMITTED"
+                    }
+                  },
+                  {
+                    "id": "C7",
+                    "databaseId": 7,
+                    "author": {
+                      "login": "reviewer2"
+                    },
+                    "body": "초안 답글",
+                    "createdAt": "2026-10-16T01:00:00Z",
+                    "pullRequestReview": {
+                      "id": "RV7",
+                      "state": "PENDING"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

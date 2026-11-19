@@ -1,0 +1,7 @@
+{
+  "truth": {
+    "verdict": "사실",
+    "accepted_patch": null
+  },
+  "baseline_opus_calls": 1
+}

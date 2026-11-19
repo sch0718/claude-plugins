@@ -1,0 +1,25 @@
+{
+  "r1-01": {
+    "a": [
+      {
+        "cmd": "python3 -m unittest test_calc.py",
+        "ok": true,
+        "tail": ""
+      }
+    ],
+    "b": [
+      {
+        "cmd": "python3 -m unittest test_calc.py",
+        "ok": true,
+        "tail": ""
+      }
+    ],
+    "adjudicator": [
+      {
+        "cmd": "python3 -m unittest test_calc.py",
+        "ok": true,
+        "tail": ""
+      }
+    ]
+  }
+}

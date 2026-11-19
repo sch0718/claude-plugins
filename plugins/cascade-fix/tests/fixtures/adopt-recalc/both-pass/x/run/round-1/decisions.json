@@ -1,0 +1,12 @@
+[
+  {
+    "finding_id": "r1-01",
+    "outcome": "판가름",
+    "patch_from": "adjudicator",
+    "reasons": [
+      "패치가 다름",
+      "판가름: a가 맞다"
+    ],
+    "adopted_as": null
+  }
+]

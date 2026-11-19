@@ -1,0 +1,2 @@
+[repos."/nonexistent/wt"]
+tests = ["python3 -m unittest {files}"]

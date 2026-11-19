@@ -1,0 +1,63 @@
+{
+  "run_id": "cf-fixture",
+  "source": "codex-code",
+  "mode": "code",
+  "root": "/nonexistent/wt",
+  "dry_run": true,
+  "status": "종료",
+  "opinions": {},
+  "adopt_on_both_pass": false,
+  "profile": {},
+  "rounds": [
+    {
+      "no": 1,
+      "findings": [
+        {
+          "id": "r1-01",
+          "source": "codex-code",
+          "severity": "Warning",
+          "location": "calc.py:2",
+          "body": "add가 더하지 않고 뺀다",
+          "evidence": "add(2, 3)이 -1을 돌려준다"
+        }
+      ],
+      "decisions": [
+        {
+          "finding_id": "r1-01",
+          "outcome": "판가름",
+          "patch_from": "adjudicator",
+          "reasons": [
+            "패치가 다름",
+            "판가름: a가 맞다"
+          ],
+          "adopted_as": null
+        }
+      ],
+      "hold_findings": [],
+      "events": [
+        {
+          "step": "init"
+        },
+        {
+          "step": "jobs"
+        },
+        {
+          "step": "judge"
+        },
+        {
+          "step": "adjudicate"
+        },
+        {
+          "step": "apply"
+        },
+        {
+          "step": "report",
+          "round": 1
+        },
+        {
+          "step": "cleanup"
+        }
+      ]
+    }
+  ]
+}

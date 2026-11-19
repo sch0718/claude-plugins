@@ -1,0 +1,44 @@
+{
+  "results": [
+    {
+      "id": "r1-01:a",
+      "output": {
+        "verdict": "사실",
+        "needs_design_decision": false,
+        "reason": "add(2, 3)이 -1을 돌려준다. a + b로 고쳤다",
+        "verify": [{"cmd": "python3 -m unittest test_calc.py", "ok": true}],
+        "model_id": "claude-sonnet-5-5"
+      }
+    },
+    {
+      "id": "r1-01:b",
+      "output": {
+        "verdict": "사실",
+        "needs_design_decision": false,
+        "reason": "add가 빼기를 한다. a + b로 고쳤다",
+        "verify": [{"cmd": "python3 -m unittest test_calc.py", "ok": true}],
+        "model_id": "claude-haiku-5-5"
+      }
+    },
+    {
+      "id": "r1-02:a",
+      "output": {
+        "verdict": "사실",
+        "needs_design_decision": false,
+        "reason": "mul(2, 3)이 5다. a * b로 고쳤다",
+        "verify": [{"cmd": "python3 -m unittest test_calc.py", "ok": true}],
+        "model_id": "claude-sonnet-5-5"
+      }
+    },
+    {
+      "id": "r1-02:b",
+      "output": {
+        "verdict": "아님",
+        "needs_design_decision": false,
+        "reason": "mul을 쓰는 곳이 없어 동작 문제가 아니다",
+        "verify": [],
+        "model_id": "claude-haiku-5-5"
+      }
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="420" viewBox="0 0 960 420" role="img" aria-labelledby="t d">
+<title id="t">cascade-fix — 리뷰 지적을 작업자 둘이 고치고, 갈린 것만 Opus가 판가름하는 Claude Code 플러그인</title>
+<desc id="d">리뷰 지적 하나를 작업자 A(Sonnet)와 B(Haiku)가 각자 워크트리에서 고치고, 테스트 등 기계 검증과 합의가 맞으면 채택해 작업 트리에 적용하며, 갈린 것만 Opus가 판가름하고, 그래도 못 정한 것은 사람이 고를 목록으로 넘기는 흐름</desc>
+<style>text{font-family:'Pretendard Variable',Pretendard,'Apple SD Gothic Neo','Noto Sans KR',system-ui,sans-serif}</style>
+<defs><marker id="ah-0F766E" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#0F766E"/></marker><marker id="ah-B45309" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#B45309"/></marker><marker id="ah-A1A1AA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#A1A1AA"/></marker><marker id="ah-6D28D9" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#6D28D9"/></marker></defs>
+<rect x="1" y="1" width="958" height="418" rx="28" fill="#FAFAF7" stroke="#E4E4E7"/>
+<rect x="40" y="36" width="52" height="52" rx="12" fill="#18181B"/>
+<rect x="50" y="48" width="14" height="8" rx="2" fill="#D9F99D"/>
+<rect x="59" y="59" width="14" height="8" rx="2" fill="#D9F99D"/>
+<rect x="68" y="70" width="14" height="8" rx="2" fill="#D9F99D"/>
+<text x="108" y="66" font-size="30" font-weight="800" fill="#18181B">cascade-fix</text>
+<text x="108" y="88" font-size="13" fill="#71717A">Claude Code 플러그인</text>
+<text x="40" y="132" font-size="17" font-weight="700" fill="#71717A">지적 하나씩, 싼 모델 둘이 고치고 검증으로 채택</text>
+<rect x="40" y="190" width="150" height="76" rx="14" fill="#FFFFFF" stroke="#E4E4E7" stroke-width="1.5"/><text x="58" y="224.0" font-size="16" font-weight="700" fill="#18181B">리뷰 지적</text><text x="58" y="245.0" font-size="12.5" fill="#71717A">Claude·Codex·PR 코멘트</text>
+<rect x="240" y="140" width="172" height="64" rx="14" fill="#FFFFFF" stroke="#E4E4E7" stroke-width="1.5"/><text x="258" y="168.0" font-size="16" font-weight="700" fill="#18181B">작업자 A</text><text x="258" y="189.0" font-size="12.5" fill="#71717A">Sonnet 5.5 · 워크트리 1</text>
+<rect x="240" y="252" width="172" height="64" rx="14" fill="#FFFFFF" stroke="#E4E4E7" stroke-width="1.5"/><text x="258" y="280.0" font-size="16" font-weight="700" fill="#18181B">작업자 B</text><text x="258" y="301.0" font-size="12.5" fill="#71717A">Haiku 5.5 · 워크트리 2</text>
+<rect x="462" y="190" width="168" height="76" rx="14" fill="#FFFFFF" stroke="#E4E4E7" stroke-width="1.5"/><text x="480" y="224.0" font-size="16" font-weight="700" fill="#18181B">기계 검증 + 합의</text><text x="480" y="245.0" font-size="12.5" fill="#71717A">테스트·빌드·린트 재실행</text>
+<rect x="690" y="120" width="230" height="64" rx="14" fill="#F0FDFA" stroke="#0F766E" stroke-width="1.5"/><text x="708" y="148.0" font-size="16" font-weight="700" fill="#0F766E">채택 → 작업 트리</text><text x="708" y="169.0" font-size="12.5" fill="#71717A">적용한 뒤 한 번 더 재검토</text>
+<rect x="690" y="212" width="230" height="64" rx="14" fill="#F5F3FF" stroke="#6D28D9" stroke-width="1.5"/><text x="708" y="240.0" font-size="16" font-weight="700" fill="#6D28D9">Opus 5.5 판가름</text><text x="708" y="261.0" font-size="12.5" fill="#71717A">갈린 지적만 골라 결정</text>
+<rect x="690" y="304" width="230" height="64" rx="14" fill="#FFFBEB" stroke="#B45309" stroke-width="1.5"/><text x="708" y="332.0" font-size="16" font-weight="700" fill="#B45309">사람이 고를 목록</text><text x="708" y="353.0" font-size="12.5" fill="#71717A">반박·설계 결정·판단 불가·보류</text>
+<path d="M190 220 C215 220 215 172 234 172" fill="none" stroke="#A1A1AA" stroke-width="2" stroke-linecap="round" marker-end="url(#ah-A1A1AA)"/>
+<path d="M190 236 C215 236 215 284 234 284" fill="none" stroke="#A1A1AA" stroke-width="2" stroke-linecap="round" marker-end="url(#ah-A1A1AA)"/>
+<path d="M412 172 C437 172 437 218 456 218" fill="none" stroke="#A1A1AA" stroke-width="2" stroke-linecap="round" marker-end="url(#ah-A1A1AA)"/>
+<path d="M412 284 C437 284 437 238 456 238" fill="none" stroke="#A1A1AA" stroke-width="2" stroke-linecap="round" marker-end="url(#ah-A1A1AA)"/>
+<path d="M630 214 C658 214 658 152 684 152" fill="none" stroke="#0F766E" stroke-width="2" stroke-linecap="round" marker-end="url(#ah-0F766E)"/>
+<path d="M630 242 C658 242 658 244 684 244" fill="none" stroke="#6D28D9" stroke-width="2" stroke-linecap="round" marker-end="url(#ah-6D28D9)"/>
+<path d="M805 276 L805 298" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" marker-end="url(#ah-B45309)"/>
+<text x="640" y="166" font-size="12" font-weight="600" fill="#0F766E" text-anchor="middle">같으면</text>
+<text x="657" y="262" font-size="12" font-weight="600" fill="#6D28D9" text-anchor="middle">갈리면</text>
+<text x="815" y="292" font-size="12" font-weight="600" fill="#B45309">못 정하면</text>
+<text x="40" y="396" font-size="13" fill="#71717A">커밋·push·resolve는 하지 않고 초안만 「준비됨」으로 · 프로필로 Codex·Cursor에 역할을 나눠 맡길 수 있음</text>
+</svg>

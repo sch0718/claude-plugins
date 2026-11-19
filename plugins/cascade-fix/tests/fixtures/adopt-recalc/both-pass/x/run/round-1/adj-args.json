@@ -1,0 +1,12 @@
+{
+  "jobs": [
+    {
+      "id": "r1-01:adjudicator",
+      "label": "r1-01 adjudicator",
+      "model": "claude-opus-5-5",
+      "effort": "high",
+      "kind": "worker",
+      "promptPath": "prompts/r1-01-adjudicator.md"
+    }
+  ]
+}

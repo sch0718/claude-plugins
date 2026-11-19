@@ -1,0 +1,12 @@
+--- ~/.claude/skills/cascade-fix/.superpowers/sdd/2026-10-17-model-cascade-fix-skill-plan/codex-review-SKILL.md.before	2026-10-16 14:24:03
++++ ~/.claude/skills/codex-review/SKILL.md	2026-10-17 02:21:04
+@@ -40,6 +40,9 @@
+ 코드 변경 모드
+ - 범위 옵션과 지시문을 함께 쓸 수 없어 지시문 없는 기본형만 지원한다. `--korean`은 `~/.codex/AGENTS.md`를 연결해 한국어 출력을 유도한다.
+ 
++재검토·의견 모드 (cascade-fix 스킬이 쓴다)
++- `--recheck <프롬프트 파일>`(수정한 diff가 지적을 해소했는지 재검토)와 `--opinion <프롬프트 파일>`(판정 의견 요청)은 호출자가 만든 프롬프트 파일을 `codex exec -s read-only --ephemeral`로 그대로 실행한다. 작업 디렉터리는 `--repo`, 없으면 프롬프트 파일이 속한 git 저장소다. 출력 형식은 프롬프트가 정한다.
++
+ 문서 모드
+ - `--kind`는 생략하면 경로로 추정한다(`plans/`·`plan` 포함 → plan, 그 외 spec). 설계(spec)는 요구사항·결정 근거·기존 코드와의 충돌·경계 조건을, 계획(plan)은 설계와의 일치·단계 순서·검증 가능성·참조한 파일/함수의 실존·스니펫 오류를 본다.
+ - 한국어 출력, Critical/Warning/Suggestion 3단계, 문서 위치(파일:행)와 근거가 프롬프트에 포함돼 있다.

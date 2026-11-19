@@ -12,6 +12,7 @@ sch0718이 만든 Claude Code 플러그인을 한곳에 모은 비공개 마켓�
 
 | 플러그인 | 설치 | 하는 일 |
 |---|---|---|
+| [cascade-fix](plugins/cascade-fix) | `/plugin install cascade-fix@sch0718-plugins` | 리뷰 지적을 작업자 둘·기계 검증·Opus 판가름으로 고침 |
 | [fanout](plugins/fanout) | `/plugin install fanout@sch0718-plugins` | 고칠 것들을 하위 세션에 나눠 맡기고 검토·PR·정리까지 진행 |
 
 ## 저장소 규칙

@@ -1,0 +1,3 @@
+[stderr] cursor-agent: loading workspace
+{"type":"result","subtype":"success","is_error":false,"result":"계획서 2단계를 검토했습니다.","session_id":"s-1","usage":{"inputTokens":1234,"outputTokens":567,"cacheReadTokens":89,"cacheWriteTokens":10}}
+[stderr] cursor-agent: done

@@ -1,0 +1,14 @@
+{
+  "results": [
+    {
+      "id": "r1-02:adjudicator",
+      "output": {
+        "verdict": "사실",
+        "needs_design_decision": false,
+        "reason": "mul(2, 3)이 5라 이름과 다르다. a * b로 고쳤다",
+        "verify": [{"cmd": "python3 -m unittest test_calc.py", "ok": true}],
+        "model_id": "claude-opus-5-5"
+      }
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "prices_as_of": "2026-10-06",
+  "price_source": "자료",
+  "unmatched": {
+    "wf_1": []
+  },
+  "workflows": {
+    "wf_1": [
+      {
+        "job_id": "r1-01:a",
+        "label": "r1-01 a",
+        "cell": "code.a",
+        "model": "claude-sonnet-5-5",
+        "input": 40,
+        "output": 800,
+        "cache_read": 20000,
+        "cache_write": 0,
+        "cost": 0.4
+      },
+      {
+        "job_id": "r1-01:b",
+        "label": "r1-01 b",
+        "cell": "code.b",
+        "model": "claude-haiku-5-5",
+        "input": 40,
+        "output": 800,
+        "cache_read": 20000,
+        "cache_write": 0,
+        "cost": 0.05
+      },
+      {
+        "job_id": "r1-01:adjudicator",
+        "label": "r1-01 adjudicator",
+        "cell": "code.adjudicator",
+        "model": "claude-opus-5-5",
+        "input": 90,
+        "output": 3000,
+        "cache_read": 60000,
+        "cache_write": 0,
+        "cost": 1.5
+      }
+    ]
+  }
+}

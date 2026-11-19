@@ -1,0 +1,5 @@
+{"type": "launched"}
+{"type": "started", "key": "k1", "agentId": "a1", "label": "r1-01 a", "phase": "Jobs"}
+{"type": "started", "key": "k2", "agentId": "a2", "label": "r1-01 b", "phase": "Jobs"}
+{"type": "result", "key": "k1"}
+{"type": "result", "key": "k2"}
