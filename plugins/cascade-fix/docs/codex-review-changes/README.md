@@ -17,6 +17,7 @@ cascade-fix의 Codex 검토자는 `codex-review` 스킬의 `scripts/run-review.s
 `--recheck <프롬프트 파일>`과 `--opinion <프롬프트 파일>`을 더했다.
 
 - 프롬프트 파일을 stdin으로 `codex exec -s read-only --ephemeral -C ROOT -o out.final -`에 넘긴다. 인자로 넘기면 큰 diff가 인자 길이 상한(ARG_MAX)에 걸린다.
+- `--doc`와 코드 리뷰 모드의 `codex` 호출은 표준 입력을 `/dev/null`로 닫는다. 백그라운드 실행에서 표준 입력이 열려 있으면 codex가 입력을 기다리며 멈춘다.
 - 기존 `--uncommitted/--base/--commit/--doc` 모드는 바꾸지 않았다.
 
 ### 임시 CODEX_HOME에서 스킬 목록 끄기 (2026-10-18)
