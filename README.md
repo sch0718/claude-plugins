@@ -12,6 +12,7 @@ sch0718이 만든 Claude Code 플러그인을 한곳에 모은 비공개 마켓�
 
 | 플러그인 | 설치 | 하는 일 |
 |---|---|---|
+| [session-move](plugins/session-move) | `/plugin install session-move@sch0718-plugins` | Code 탭 세션을 다른 계정·다른 기기로 옮김 |
 | [architecture-motion](plugins/architecture-motion) | `/plugin install architecture-motion@sch0718-plugins` | 구성 변화·흐름·장애를 브라우저 모션 그래픽으로 |
 | [offline-doc-bundle](plugins/offline-doc-bundle) | `/plugin install offline-doc-bundle@sch0718-plugins` | 마크다운을 폐쇄망에서 열리는 HTML·PDF 배포본으로 |
 | [doclookup](plugins/doclookup) | `/plugin install doclookup@sch0718-plugins` | 문서를 절 단위로 색인해 낱말·ID·링크가 쓰인 곳을 파일:줄로 찾음 |
