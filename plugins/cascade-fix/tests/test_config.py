@@ -224,9 +224,9 @@ class RepoTomlLocationTest(unittest.TestCase):
     def test_plugin_and_marketplace_versions(self):
         plugin = json.loads((SKILL_ROOT / ".claude-plugin/plugin.json").read_text(encoding="utf-8"))
         market = json.loads((MARKETPLACE).read_text(encoding="utf-8"))
-        self.assertEqual(plugin["version"], "1.6.7")
+        self.assertEqual(plugin["version"], "1.6.8")
         entry = [p for p in market["plugins"] if p["name"] == "cascade-fix"]
-        self.assertEqual([p["version"] for p in entry], ["1.6.7"])
+        self.assertEqual([p["version"] for p in entry], ["1.6.8"])
         self.assertEqual(entry[0]["source"], "./plugins/cascade-fix")
 
     def test_marketplace_schema_accepted_by_older_claude_code(self):

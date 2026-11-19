@@ -32,15 +32,15 @@ class ProfilesTest(unittest.TestCase):
         self.assertEqual(d["roles"]["code.opinion"]["runner"], "auto")
         self.assertEqual(d["roles"]["code.review"]["runner"], "auto")
         self.assertFalse(d["adopt_on_both_pass"])
-        self.assertEqual(co["roles"]["code.opinion"], {"runner": "claude", "model": "claude-fable-5-1", "effort": "high",
-                                                       "fallback": {"runner": "claude", "model": "claude-fable-5-1", "effort": "high"}})
+        self.assertEqual(co["roles"]["code.opinion"], {"runner": "claude", "model": "claude-fable-5-2", "effort": "high",
+                                                       "fallback": {"runner": "claude", "model": "claude-fable-5-2", "effort": "high"}})
         self.assertTrue(co["adopt_on_both_pass"])
         self.assertEqual(lo["roles"]["code.a"]["runner"], "codex")
         self.assertEqual(lo["roles"]["code.a"]["effort"], "low")
         self.assertEqual(lo["roles"]["code.b"]["model"], "claude-haiku-5-5")
         self.assertEqual(lo["roles"]["doc.judge_a"]["model"], "claude-sonnet-5-5")
         self.assertEqual(lo["roles"]["code.review"], {"runner": "codex", "model": "", "effort": "",
-                                                      "fallback": {"runner": "claude", "model": "claude-fable-5-1", "effort": "high"}})
+                                                      "fallback": {"runner": "claude", "model": "claude-fable-5-2", "effort": "high"}})
         for key in ("code.adjudicator", "doc.adjudicator"):
             self.assertEqual(lo["roles"][key]["model"], "claude-opus-5-5")
 
@@ -70,8 +70,8 @@ class ProfilesTest(unittest.TestCase):
         self.assertEqual(me(profiles.reset_cell("code.opinion", "codex")), ("", ""))
         self.assertEqual(me(profiles.reset_cell("code.a", "codex")), ("", "low"))
         self.assertEqual(me(profiles.reset_cell("code.b", "cursor", "composer-3")), ("composer-3", ""))
-        self.assertEqual(me(profiles.reset_cell("code.opinion", "claude")), ("claude-fable-5-1", "high"))
-        self.assertEqual(me(profiles.reset_cell("code.opinion", "auto")), ("claude-fable-5-1", "high"))
+        self.assertEqual(me(profiles.reset_cell("code.opinion", "claude")), ("claude-fable-5-2", "high"))
+        self.assertEqual(me(profiles.reset_cell("code.opinion", "auto")), ("claude-fable-5-2", "high"))
 
     def test_merge_runner_only_drops_old_model(self):
         base = profiles.builtin("claude-only")["roles"]["code.a"]

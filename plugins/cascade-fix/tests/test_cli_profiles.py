@@ -94,10 +94,10 @@ class CliProfilesTest(unittest.TestCase):
 
     def test_init_without_profile_and_without_review_cli_is_claude(self):
         p = self.init(env={"CASCADE_RUN_REVIEW": str(self.tmp / "none.sh")})
-        self.old_behaviour(p, reviewer="claude", review_model="claude-fable-5-1", review_effort="high")
-        self.assertIn("의견=Claude(Fable 5.1 high), 재검토=Claude(Fable 5.1 high)", p.stdout)
+        self.old_behaviour(p, reviewer="claude", review_model="claude-fable-5-2", review_effort="high")
+        self.assertIn("의견=Claude(Fable 5.2 high), 재검토=Claude(Fable 5.2 high)", p.stdout)
         self.assertNotIn("전송 동의", p.stdout)
-        self.assertIn("의견·재검토: Claude 단독(claude-fable-5-1, high) — 외부 전송 없음", p.stdout)
+        self.assertIn("의견·재검토: Claude 단독(claude-fable-5-2, high) — 외부 전송 없음", p.stdout)
 
     def test_init_prints_profile_lines_before_scale_line(self):
         p = self.init(env={"CASCADE_RUN_REVIEW": str(self.tmp / "none.sh")})
@@ -287,7 +287,7 @@ class LocalProfileTest(ExternalWorkersBase):
         ledger = self.ledger_json(p)
         self.assertIn("덮음: code.opinion·code.recheck·doc.opinion·doc.recheck ← --reviewer claude", p.stdout)
         self.assertIn("code.opinion ← --reviewer claude", ledger["profile"]["overrides"])
-        self.assertEqual((ledger["reviewer"], ledger["review_model"]), ("claude", "claude-fable-5-1"))
+        self.assertEqual((ledger["reviewer"], ledger["review_model"]), ("claude", "claude-fable-5-2"))
 
     def test_init_explicit_override_is_not_substituted(self):
         p = self.init_cli("--profile", "claude-only", "--reviewer", "codex")
@@ -462,7 +462,7 @@ class InitFirstReviewHistoryTest(ExternalWorkersBase):
 
     def test_completed_first_review_is_history_not_assignment(self):
         p = self.init_with_meta({"requested": {"runner": "codex", "model": "", "effort": ""},
-                                 "actual": {"runner": "claude", "model": "claude-fable-5-1", "effort": "high"},
+                                 "actual": {"runner": "claude", "model": "claude-fable-5-2", "effort": "high"},
                                  "fallback_reason": "한도", "attempts": [{"runner": "codex", "reason": "한도"}]})
         self.assertIn("역할: 첫 검토(완료)=Codex → Claude(한도), A=Codex(gpt-test low)", p.stdout)
         self.assertIn("전송 동의: A·의견·재검토 → OpenAI", p.stdout)
@@ -525,7 +525,7 @@ REVIEW_PROFILES = """
 "code.opinion" = { runner = "claude", model = "claude-sonnet-5-5", effort = "low" }
 "code.recheck" = { runner = "claude", model = "claude-haiku-5-5", effort = "low" }
 """
-FABLE = "claude-fable-5-1"
+FABLE = "claude-fable-5-2"
 SONNET_ID = "claude-sonnet-5-5"
 LIMIT_LOG = "You've hit your usage limit\n"
 ERROR_LOG = "codex 시작\nERROR: stream disconnected\n"
@@ -837,7 +837,7 @@ class ReviewRolesFallbackTest(ReviewRolesBase):
         self.assertIn("Workflow 실행", self.next_steps(p)[0])
 
 
-FABLE_CELL = {"runner": "claude", "model": "claude-fable-5-1", "effort": "high"}
+FABLE_CELL = {"runner": "claude", "model": "claude-fable-5-2", "effort": "high"}
 FIRST_REVIEW_PROFILES = """
 [profiles.split]
 "code.review" = { runner = "claude", model = "claude-sonnet-5-5", effort = "low" }
@@ -1546,7 +1546,7 @@ class InitReviewScriptTest(ExternalWorkersBase):
         self.assertEqual(self.ledger().reviewer, "claude")
         self.assertIn("대체: code.opinion codex → claude — 검토 스크립트 없음", p.stdout)
         self.assertIn("대체: code.recheck codex → claude — 검토 스크립트 없음", p.stdout)
-        self.assertIn("의견=Claude(Fable 5.1 high), 재검토=Claude(Fable 5.1 high)", p.stdout)
+        self.assertIn("의견=Claude(Fable 5.2 high), 재검토=Claude(Fable 5.2 high)", p.stdout)
         self.assertIn("전송 동의: A → OpenAI", p.stdout)
         self.assertNotIn("스킬이 없다", p.stdout)
 

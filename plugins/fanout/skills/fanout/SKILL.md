@@ -71,7 +71,7 @@ description: 이 대화에서 정리된 「고쳐야 할 것들」을 서로 겹
 - **문서 찾기:** <문서·위키를 조사하는 작업이면 이 세션의 지침(전역·프로젝트 `CLAUDE.md`/`AGENTS.md`)이 정한 문서 찾기 명령(예: doclookup)을 그 형태 그대로 적는다. 정해진 명령이 없으면 이 줄을 지운다>
 - **설계·계획:** 큰 작업은 brainstorming으로 설계(spec), writing-plans로 구현계획(plan)을 쓴다. 작은 작업은 설계와 계획을 짧은 문서 하나로 쓴다. 각 문서는 `codex-review` 스킬(`--doc`)로 검토하고 지적은 `/cascade-fix:cascade-fix`로 고친다. 검토는 최대 2회, 2회차에는 Critical만 고친다. 지적이 좁은 경계 사례로 옮겨 가면 2회 전이라도 끝낸다.
 - **구현:** Codex CLI로 한다. 워크트리 루트에서 백그라운드로 실행하고 완료 알림을 기다린다(폴링하지 않는다).
-  `codex exec -m gpt-6.1-sol -c model_reasoning_effort=high -s workspace-write "<계획 파일 경로와 할 일>" < /dev/null`
+  `codex exec -m gpt-6.2-sol -c model_reasoning_effort=high -s workspace-write "<계획 파일 경로와 할 일>" < /dev/null`
   `< /dev/null`을 빼지 않는다. 백그라운드 Bash의 stdin은 닫히지 않는 소켓이라, 빼면 Codex가 「Reading additional input from stdin...」에서 끝없이 기다린다.
   Codex 샌드박스는 네트워크가 막혀 시험·빌드가 실패할 수 있다. 시험·타입·빌드는 Codex가 끝난 뒤 이 세션이 직접 돌리고, diff를 직접 읽어 확인한다.
 - **구현 검토:** Agent 하위 에이전트(`model: opus`, `effort: high`)로 브랜치 diff를 검토한다. Critical/Warning/Info로 나눠 받는다.

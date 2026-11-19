@@ -575,7 +575,7 @@ class RoleSectionTest(unittest.TestCase):
 
     def test_first_review_history_is_shown(self):
         first = {"role": "code.review", "requested": {"runner": "codex", "model": "", "effort": ""},
-                 "actual": {"runner": "claude", "model": "claude-fable-5-1", "effort": "high"},
+                 "actual": {"runner": "claude", "model": "claude-fable-5-2", "effort": "high"},
                  "fallback_reason": "한도", "attempts": [{"runner": "codex", "reason": "한도"}]}
         text = section(self.render(profile_ledger(profile_record("local", first_review=first), source="claude-code")),
                        "## 역할 배정")
@@ -583,7 +583,7 @@ class RoleSectionTest(unittest.TestCase):
 
     def test_first_review_chain_names_every_attempt(self):
         first = {"role": "code.review", "requested": {"runner": "codex", "model": "", "effort": ""},
-                 "actual": {"runner": "claude", "model": "claude-fable-5-1", "effort": "high"}, "fallback_reason": "오류",
+                 "actual": {"runner": "claude", "model": "claude-fable-5-2", "effort": "high"}, "fallback_reason": "오류",
                  "attempts": [{"runner": "codex", "reason": "한도"}, {"runner": "cursor", "reason": "오류"}]}
         text = self.render(profile_ledger(profile_record("local", first_review=first), source="claude-code"))
         self.assertIn("첫 검토 Codex → Cursor(한도) → Claude(오류)", text)
@@ -705,7 +705,7 @@ class RoleUsageTest(unittest.TestCase):
 
     def test_first_review_row_is_named_by_the_first_review_runner_not_the_opinion_cell(self):
         first = {"role": "code.review", "requested": {"runner": "codex", "model": "", "effort": ""},
-                 "actual": {"runner": "claude", "model": "claude-fable-5-1", "effort": "high"},
+                 "actual": {"runner": "claude", "model": "claude-fable-5-2", "effort": "high"},
                  "fallback_reason": "한도", "attempts": [{"runner": "codex", "reason": "한도"}]}
         record = profile_record("local", first_review=first)
         usage = section(report.render(profile_ledger(record, source="claude-code", opinions={"F1": "의견"}), False),
@@ -723,9 +723,9 @@ class RoleUsageTest(unittest.TestCase):
 
     def test_review_rows_count_fallback_executions_with_reasons(self):
         events = [{"step": "opinion:F1", "at": "t", "runner": "codex", "model": ""},
-                  {"step": "opinion:F2", "at": "t", "runner": "claude", "model": "claude-fable-5-1",
+                  {"step": "opinion:F2", "at": "t", "runner": "claude", "model": "claude-fable-5-2",
                    "fallback": {"from": "codex", "to": "claude", "reason": "이용 한도"}},
-                  {"step": "recheck", "at": "t", "runner": "claude", "model": "claude-fable-5-1",
+                  {"step": "recheck", "at": "t", "runner": "claude", "model": "claude-fable-5-2",
                    "fallback": {"from": "codex", "to": "claude", "reason": "실행 오류"}}]
         ledger = profile_ledger(profile_record("local"), events=events, opinions={"F1": "a", "F2": "b"}, recheck=True)
         usage = section(report.render(ledger, False), "## 역할별 사용량")

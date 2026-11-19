@@ -527,7 +527,7 @@ class ScoreAccuracyTest(unittest.TestCase):
         self.assertIn("| 정확도 | 1/1 (100.0%)", p.stdout)
 
 
-SONNET, HAIKU, OPUS, FABLE = "claude-sonnet-5-5", "claude-haiku-5-5", "claude-opus-5-5", "claude-fable-5-1"
+SONNET, HAIKU, OPUS, FABLE = "claude-sonnet-5-5", "claude-haiku-5-5", "claude-opus-5-5", "claude-fable-5-2"
 COUNTED_ITEM = "x"
 
 

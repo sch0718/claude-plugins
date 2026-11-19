@@ -116,7 +116,7 @@ class StartGoTest(CliTestBase):
         self.assertEqual(git(self.repo, "rev-list", "--count", "HEAD"), commits)
 
         recheck = workflow_output(self.tmp / "recheck.out", {"results": [
-            {"id": "round-1:recheck", "output": {"text": RECHECK_RESULT, "model_id": "claude-fable-5-1"}}]})
+            {"id": "round-1:recheck", "output": {"text": RECHECK_RESULT, "model_id": "claude-fable-5-2"}}]})
         p = self.go("--workflow-output", str(recheck))
         self.assertEqual(self.ledger().status, "종료")
         self.assertTrue((self.run_dir / "report.md").is_file())
@@ -148,7 +148,7 @@ class StartGoTest(CliTestBase):
         p = self.go("--workflow-output", str(broken), ok=False)
         self.assertNotEqual(p.returncode, 0)
         self.assertNotEqual(self.ledger().status, "종료")
-        good = self.recheck_output("good.out", {"text": RECHECK_RESULT, "model_id": "claude-fable-5-1"})
+        good = self.recheck_output("good.out", {"text": RECHECK_RESULT, "model_id": "claude-fable-5-2"})
         p = self.go("--workflow-output", str(good))
         self.assertEqual(self.ledger().status, "종료")
         self.assertIn("멈춤: report까지 끝났다", p.stdout)
@@ -226,7 +226,7 @@ class StartGoTest(CliTestBase):
         self.assertIn("멈춤: 모델 ID 경고", p.stdout)
         self.assertNotEqual(self.ledger().status, "종료")
         self.assertFalse(any(e["step"] == "recheck" for e in self.ledger().rounds[0].events))
-        good = self.recheck_output("good-model.out", {"text": RECHECK_RESULT, "model_id": "claude-fable-5-1"})
+        good = self.recheck_output("good-model.out", {"text": RECHECK_RESULT, "model_id": "claude-fable-5-2"})
         p = self.go("--workflow-output", str(good))
         self.assertEqual(self.ledger().status, "종료")
         self.assertIn("멈춤: report까지 끝났다", p.stdout)

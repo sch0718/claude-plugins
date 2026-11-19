@@ -501,7 +501,7 @@ class ClaudeViaAdjudicateTest(ClaudeViaTestBase):
         self.env["FAKE_CLAUDE_RESULTS_MODELS"] = json.dumps({
             "claude-haiku-5-5": json.loads(result_json(verdict="아님")),
             "claude-opus-5-5": json.loads(result_json(verdict="못 정함")),
-            "claude-fable-5-1": {"text": "opinion text", "model_id": "reported"}})
+            "claude-fable-5-2": {"text": "opinion text", "model_id": "reported"}})
         p = self.start("--claude-via", "cli")
         self.assertNotIn("Workflow 결과가 필요하다", p.stdout)
         self.assertTrue((self.run_dir / "report.md").is_file())

@@ -182,10 +182,10 @@ Codex 검토 결과(review.final) 반영해줘
 
 | 칸 | `default` | `claude-only` | `local` |
 | --- | --- | --- | --- |
-| 첫 검토(`*.review`) | auto(= Claude Fable 5.1 high) | Claude Fable 5.1 high | Codex |
+| 첫 검토(`*.review`) | auto(= Claude Fable 5.2 high) | Claude Fable 5.2 high | Codex |
 | 작업자 6칸(`code.a`·`code.b`·`doc.judge_a`·`doc.judge_b`·`doc.writer`·`doc.checker`) | Sonnet 5.5 low(a·judge_a·writer) / Haiku 5.5 low(b·judge_b·checker) | 같음 | `code.a`만 Codex(`~/.codex/config.toml` 모델, low). 나머지는 `default`와 같음 |
 | 판가름 | Opus 5.5 high | 같음 | 같음 |
-| 의견·재검토 | auto(Claude면 Fable 5.1 high) | Claude Fable 5.1 high | Codex |
+| 의견·재검토 | auto(Claude면 Fable 5.2 high) | Claude Fable 5.2 high | Codex |
 | fallback | `claude-only`의 같은 칸 | - | `claude-only`의 같은 칸 |
 | `adopt_on_both_pass` | 꺼짐 | 켜짐 | 켜짐 |
 
@@ -294,7 +294,7 @@ tests = ["pytest {files}"]
 
 | runner | 동작 |
 | --- | --- |
-| `claude` | Claude 에이전트가 맡습니다. 외부 전송이 없습니다. 기본 모델은 `claude-fable-5-1`(effort `high`)입니다. 판가름을 맡는 Opus와 다른 모델을 써서 같은 판단을 되풀이하지 않게 하려는 것입니다 |
+| `claude` | Claude 에이전트가 맡습니다. 외부 전송이 없습니다. 기본 모델은 `claude-fable-5-2`(effort `high`)입니다. 판가름을 맡는 Opus와 다른 모델을 써서 같은 판단을 되풀이하지 않게 하려는 것입니다 |
 | `codex` | `run-review.sh --opinion/--recheck`로 OpenAI에 보냅니다. 호출은 한 번에 하나씩 돌립니다(동시에 토큰을 갱신하면 로그인이 풀릴 수 있습니다) |
 | `cursor` | `cursor-review`의 `run-review.sh --opinion/--recheck`로 Cursor(팀 프라이버시 모드)에 보냅니다. 읽기 전용이고 모델은 기본 `composer-2.5`입니다. 호출은 한 번에 하나씩 돌립니다 |
 

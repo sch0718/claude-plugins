@@ -77,8 +77,8 @@ PYTHONPATH="${CLAUDE_SKILL_DIR}" python3 -m cascade.cli
 
 | 내장 프로필 | 첫 검토 | 작업자 6칸 | 판가름 | 의견·재검토 | `adopt_on_both_pass` |
 | --- | --- | --- | --- | --- | --- |
-| `default` | auto(= Claude Fable 5.1 high) | Sonnet 5.5 low(a·judge_a·writer) / Haiku 5.5 low(b·judge_b·checker) | Opus 5.5 high | auto(`--reviewer auto` 규칙) | 꺼짐 |
-| `claude-only` | Claude Fable 5.1 high | `default`와 같음 | 같음 | Claude Fable 5.1 high | 켜짐 |
+| `default` | auto(= Claude Fable 5.2 high) | Sonnet 5.5 low(a·judge_a·writer) / Haiku 5.5 low(b·judge_b·checker) | Opus 5.5 high | auto(`--reviewer auto` 규칙) | 꺼짐 |
+| `claude-only` | Claude Fable 5.2 high | `default`와 같음 | 같음 | Claude Fable 5.2 high | 켜짐 |
 | `local`(측정 전 잠정값) | Codex | `code.a`만 Codex(`~/.codex/config.toml` 모델, low), 나머지 `default`와 같음 | 같음 | Codex | 켜짐 |
 
 - 칸마다 fallback이 있다. 내장 프로필의 fallback은 모두 `claude-only`의 같은 칸이다.
@@ -112,11 +112,11 @@ PYTHONPATH="${CLAUDE_SKILL_DIR}" python3 -m cascade.cli
 | `auto` | init이 정한다. `--source`가 `claude-*`이면 `claude`. 아니면 `codex-review` 스킬(`RR`)이 있으면 `codex`. 아니면 `CR`이 있고 `cursor-agent`가 로그인돼 있으면 `cursor`. 모두 아니면 `claude` |
 | `codex` | `RR --opinion`·`RR --recheck`로 OpenAI에 보낸다. 모델·effort는 비운다(RR에 옵션이 없다) |
 | `cursor` | `CR --opinion`·`CR --recheck`로 Cursor(팀 프라이버시 모드)에 보낸다. 읽기 전용이고 `--model` 기본값은 `composer-2.5`다 |
-| `claude` | 의견·재검토를 Workflow 도구의 Claude 에이전트(`kind: review`)로 돌린다. 외부 전송이 없다. 기본 모델 `claude-fable-5-1`(effort `high`)은 판가름자(Opus)와 달라 의견이 판가름을 되풀이하지 않게 한다 |
+| `claude` | 의견·재검토를 Workflow 도구의 Claude 에이전트(`kind: review`)로 돌린다. 외부 전송이 없다. 기본 모델 `claude-fable-5-2`(effort `high`)은 판가름자(Opus)와 달라 의견이 판가름을 되풀이하지 않게 한다 |
 
 - 한도(usage limit)·시간 초과·실행 오류는 멈추지 않고 그 칸의 fallback으로 자동으로 다시 돈다. **프로필을 고르지 않은 기본 동작에서도 같다(v1.2.0은 한도에서 멈췄다).** 로그인 만료(401·refresh token)는 대체하지 않고 멈추고 `codex login`·`cursor-agent login`을 안내한다. `CF`는 `RR`·`CR`의 종료 코드(75·77)를 보지 못하고 실행 로그 끝 20줄의 흔적으로 가른다. 그래서 로그에 인증 흔적 없이 77로 끝난 실행은 실행 오류로 보고 fallback으로 간다. 절차는 7·8·10·11에 있다.
 - 실행 중 대체는 init·jobs가 정한 배정(`profile.roles`·`profile.substituted`)과 따로 `profile.runtime_substitutions`에 칸·사유·회차로 남고 다음 회차에도 이어진다. 항목 모양: `profile.substituted`는 `{role, from, to, reason}`, `profile.runtime_substitutions`는 `{role, from, to, cell, reason, round}`다. 두 곳 모두 `from`·`to`는 runner 이름이고, `cell`은 대체 뒤 칸 전체(`{runner, model, effort, fallback}`)다. 보고서는 의견마다 실제로 맡은 runner를 붙인다.
-- Claude 검토자 모델은 `--review-model`(기본 `claude-fable-5-1`), effort는 `--review-effort`(기본 `high`)로 덮는다. 원장에 남고 모델 ID 경고의 기대값이 된다.
+- Claude 검토자 모델은 `--review-model`(기본 `claude-fable-5-2`), effort는 `--review-effort`(기본 `high`)로 덮는다. 원장에 남고 모델 ID 경고의 기대값이 된다.
 - 첫 검토도 Claude로 하려면 아래 「Claude 단독 첫 검토」로 결과를 만든 뒤 `--source claude-code|claude-doc`으로 init한다. Codex 결과 파일(`codex-*`)·Cursor 결과 파일(`cursor-*`)이나 PR 코멘트를 받아 의견·재검토만 Claude로 돌려도 된다(`--reviewer claude`).
 
 ### Claude 단독 첫 검토

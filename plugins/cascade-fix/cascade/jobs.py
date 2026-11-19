@@ -16,7 +16,7 @@ ROLES = {
     "writer": ("claude-sonnet-5-5", "low"),
     "checker": ("claude-haiku-5-5", "low"),
     "adjudicator": ("claude-opus-5-5", "high"),
-    "reviewer": ("claude-fable-5-1", "high"),
+    "reviewer": ("claude-fable-5-2", "high"),
 }
 
 RUNNER_CLAUDE = "claude"

@@ -142,7 +142,7 @@ class ModeWorkersTest(unittest.TestCase):
         roles = profiles.builtin("claude-only")["roles"]
         legacy = assignment.legacy_fields({"roles": roles}, "doc")
         self.assertEqual(legacy["reviewer"], "claude")
-        self.assertEqual((legacy["review_model"], legacy["review_effort"]), ("claude-fable-5-1", "high"))
+        self.assertEqual((legacy["review_model"], legacy["review_effort"]), ("claude-fable-5-2", "high"))
         self.assertEqual((legacy["workers_choice"], legacy["workers"]), ("claude", {}))
         self.assertFalse(legacy["adopt_on_both_pass"])
 
@@ -330,10 +330,10 @@ class LedgerProfileTest(unittest.TestCase):
         return Ledger(run_id="r", source="codex-code", mode="code", root="/x", snapshot={}, dry_run=True, **kw)
 
     def test_old_ledger_without_profile(self):
-        ledger = self.ledger(reviewer="claude", review_model="claude-fable-5-1", review_effort="high")
+        ledger = self.ledger(reviewer="claude", review_model="claude-fable-5-2", review_effort="high")
         rec = assignment.ledger_profile(ledger)
         self.assertEqual(rec["name"], "legacy")
-        self.assertEqual(rec["roles"]["code.opinion"]["model"], "claude-fable-5-1")
+        self.assertEqual(rec["roles"]["code.opinion"]["model"], "claude-fable-5-2")
         self.assertEqual(rec["roles"]["code.a"]["model"], "claude-sonnet-5-5")
         profiles.validate("legacy", {"adopt_on_both_pass": False, "roles": rec["roles"]})
 
