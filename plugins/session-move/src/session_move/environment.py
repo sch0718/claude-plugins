@@ -1,6 +1,7 @@
 """Company-word checks over text, JSON and files, plus JSON-with-comments reading."""
 from __future__ import annotations
 
+import codecs
 import json
 import os
 import re
@@ -53,26 +54,21 @@ class Words:
         return self.hit(json.dumps(value, ensure_ascii=False))
 
     def file_status(self, path: Path) -> str:
-        """'hit', 'binary' or 'clean'. Streams the whole file with an overlap so no word is split."""
+        """'hit', 'binary' or 'clean'. Streams the whole file; multi-byte characters may straddle chunks."""
+        decoder = codecs.getincrementaldecoder("utf-8")(errors="replace")
         tail = ""
         with open(path, "rb") as f:
             first = True
             while True:
                 raw = f.read(CHUNK)
-                if not raw:
-                    return "clean"
                 if first and b"\x00" in raw[:8192]:
                     return "binary"
                 first = False
-                try:
-                    text = raw.decode("utf-8")
-                except UnicodeDecodeError:
-                    try:
-                        text = (raw + f.read(4)).decode("utf-8")
-                    except UnicodeDecodeError:
-                        return "binary"
+                text = decoder.decode(raw, final=not raw)
                 if self.hit(tail + text):
                     return "hit"
+                if not raw:
+                    return "clean"
                 tail = text[-OVERLAP:]
 
 

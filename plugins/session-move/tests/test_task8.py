@@ -201,6 +201,19 @@ class PathMapTest(unittest.TestCase):
         sch = remap_schedule({"cwd": "/Users/alice/r", "filePath": "/Users/alice/.claude/x/SKILL.md"}, pm)
         self.assertNotIn("/Users/alice", json.dumps(sch))
 
+    def test_file_status_handles_utf8_split_across_chunks(self):
+        from session_move.environment import CHUNK, Words
+        p = Path(tempfile.mkdtemp()) / "t.jsonl"
+        head = b"a" * (CHUNK - 1) + "한".encode()          # 3-byte char straddles the chunk boundary
+        p.write_bytes(head + ("가" * 5000).encode() + f" {CO}\n".encode())
+        self.assertEqual(Words([CO], []).file_status(p), "hit")
+
+    def test_uncheckable_transcript_excludes_session(self):
+        from session_move.environment import Words
+        p = Path(tempfile.mkdtemp()) / "t.jsonl"
+        p.write_bytes(b'{"a": "\xff\xfe broken"}\n' + f'{{"b": "{CO}"}}\n'.encode())
+        self.assertEqual(Words([CO], []).file_status(p), "hit")
+
     def test_read_jsonc_mcp_with_comments(self):
         p = Path(tempfile.mkdtemp()) / "m.json"
         p.write_text('{\n // c\n "a": "https://x.example.com//y", /* b */ "b": 1\n}\n')

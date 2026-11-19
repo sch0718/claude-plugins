@@ -156,12 +156,12 @@ def export_bundle(paths: Paths, source: str, out: Path, items: set[str], include
             if s["sessionId"] in repo_hits:
                 continue
             files = [sdir / f"{s['sessionId']}.json"] + _transcript_paths(paths, [s["cliSessionId"], *s["priorCliSessionIds"]])
-            if any(unit_status(f, words) == "hit" for f in files if f.exists()):
+            if any(unit_status(f, words) != "clean" for f in files if f.exists()):
                 text_hits.add(s["sessionId"])
         arch_hits = set()
         for a in full["archived"]:
             f = sdir / f"{a['sessionId']}.json"
-            if a.get("isCompany") or (f.exists() and words.file_status(f) == "hit"):
+            if a.get("isCompany") or (f.exists() and words.file_status(f) != "clean"):
                 arch_hits.add(a["sessionId"])
         excluded_ids = _descendants(full["sessions"], repo_hits | text_hits) | arch_hits
         company_present = bool(excluded_ids)
