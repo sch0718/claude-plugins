@@ -172,7 +172,7 @@ PROMPT
 status=0
 if [ "$mode" = doc ]; then
   CODEX_HOME="$HOME_DIR" "$CODEX" exec -s read-only --ephemeral -C "$ROOT" \
-    -o "$out.final" "$(doc_prompt)" > "$out" 2>&1 || status=$?
+    -o "$out.final" "$(doc_prompt)" < /dev/null > "$out" 2>&1 || status=$?
 elif [ "$mode" = recheck ] || [ "$mode" = opinion ]; then
   # 프롬프트는 stdin(-)으로 넘긴다. 큰 diff가 인자 길이 상한(ARG_MAX)에 걸리지 않게 한다
   CODEX_HOME="$HOME_DIR" "$CODEX" exec -s read-only --ephemeral -C "$ROOT" \
@@ -183,7 +183,7 @@ else
     base) args=(--base "$target") ;;
     commit) args=(--commit "$target") ;;
   esac
-  CODEX_HOME="$HOME_DIR" "$CODEX" review "${args[@]}" > "$out" 2>&1 || status=$?
+  CODEX_HOME="$HOME_DIR" "$CODEX" review "${args[@]}" < /dev/null > "$out" 2>&1 || status=$?
   awk '/^codex$/ {buf=""; next} {buf = buf $0 "\n"} END {printf "%s", buf}' "$out" | awk '$0 != prev {print} {prev=$0}' > "$out.final"
 fi
 
