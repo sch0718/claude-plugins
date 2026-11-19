@@ -7,6 +7,7 @@ import json
 import os
 import shutil
 import tarfile
+import time
 from pathlib import Path
 
 
@@ -22,7 +23,7 @@ def backup(targets: list[Path], state_dir: Path) -> Path:
             entries.append({"path": str(t), "existed": existed, "member": f"e{i}"})
             if existed:
                 tar.add(t, arcname=f"e{i}")
-        data = json.dumps({"entries": entries}, ensure_ascii=False).encode()
+        data = json.dumps({"entries": entries, "createdNs": time.time_ns()}, ensure_ascii=False).encode()
         info = tarfile.TarInfo("index.json")
         info.size = len(data)
         tar.addfile(info, io.BytesIO(data))
@@ -62,3 +63,31 @@ def restore(archive: Path) -> None:
                     with tar.extractfile(m) as src, open(dest, "wb") as f:
                         shutil.copyfileobj(src, f)
                     os.chmod(dest, m.mode & 0o777)
+
+
+def mark_applied(archive: Path) -> None:
+    Path(str(archive) + ".applied").write_text(str(time.time_ns()))
+
+
+def entries(archive: Path) -> tuple[list[Path], int]:
+    with tarfile.open(archive, "r:gz") as tar:
+        index = json.loads(tar.extractfile("index.json").read())
+    since = index.get("createdNs", 0)
+    applied = Path(str(archive) + ".applied")
+    if applied.is_file():
+        since = int(applied.read_text().strip() or since)
+    return [Path(e["path"]) for e in index["entries"]], since
+
+
+def changed_since(archive: Path) -> list[Path]:
+    paths, since = entries(archive)
+    out = []
+    for root in paths:
+        if root.is_symlink() or root.is_file():
+            candidates = [root]
+        elif root.is_dir():
+            candidates = [Path(dp) / n for dp, _, fs in os.walk(root) for n in fs]
+        else:
+            candidates = []
+        out += [c for c in candidates if not c.is_symlink() and c.stat().st_mtime_ns > since]
+    return out

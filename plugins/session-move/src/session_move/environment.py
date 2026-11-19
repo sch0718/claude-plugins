@@ -5,6 +5,7 @@ import codecs
 import json
 import os
 import re
+import unicodedata
 from pathlib import Path
 
 from session_move.company import CompanyRules
@@ -16,7 +17,7 @@ _NORM = re.compile(r"[-_.\s]+")
 
 
 def _norm(s: str) -> str:
-    return _NORM.sub("", s.lower())
+    return _NORM.sub("", unicodedata.normalize("NFKC", s).lower())
 
 
 def denylist_path(home: Path) -> Path:
@@ -27,7 +28,8 @@ class Words:
     """Company words: company config orgs/repos plus every denylist entry, case/-/_/space insensitive."""
 
     def __init__(self, terms: list[str], regexes: list[re.Pattern]):
-        self.terms = [t for t in dict.fromkeys(_norm(x) for x in terms) if t]
+        variants = [v for x in terms for v in (x, json.dumps(x)[1:-1])]
+        self.terms = [t for t in dict.fromkeys(_norm(x) for x in variants) if t]
         self.regexes = regexes
 
     @classmethod

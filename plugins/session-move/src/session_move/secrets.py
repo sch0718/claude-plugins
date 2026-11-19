@@ -41,3 +41,14 @@ def blank_mcp(servers: dict) -> dict:
             if isinstance(spec.get(key), dict):
                 spec[key] = {k: "" for k in spec[key]}
     return out
+
+
+_TEXT_CONTENT = re.compile(CONTENT.pattern.decode())
+
+
+def redact(text: str) -> tuple[str, int]:
+    return _TEXT_CONTENT.subn("<removed>", text)
+
+
+def strip_userinfo(url: str) -> str:
+    return re.sub(r"^([a-z+]+://)[^/@]*@", r"\1", url)

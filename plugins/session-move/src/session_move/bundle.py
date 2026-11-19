@@ -16,7 +16,7 @@ from pathlib import Path
 
 from session_move.app import app_is_running
 from session_move.backlog import merge_backlog
-from session_move.backup import backup
+from session_move.backup import backup, mark_applied
 from session_move.company import CompanyRules, origin_url
 from session_move.environment import Words, denylist_path, iter_files, read_jsonc, unit_status
 from session_move.jsonio import load_json, write_json
@@ -26,7 +26,8 @@ from session_move.pathmap import (PathMap, remap_backlog_item, remap_schedule, r
 from session_move.paths import Paths
 from session_move.schedules import merge_schedules
 from session_move.scopes import list_scopes
-from session_move.secrets import blank_mcp, scan_secrets
+from session_move.secrets import blank_mcp, redact, scan_secrets, strip_userinfo
+from session_move.sessions import ACCOUNT_BOUND_FIELDS
 from session_move.sessions import apply_sessions, plan_sessions
 
 
@@ -86,6 +87,10 @@ class _Tar:
         self.tar = tarfile.open(out, "w:gz")
 
     def add_bytes(self, name: str, data: bytes) -> None:
+        text, n = redact(data.decode("utf-8", "replace"))
+        if n:
+            self.report.excluded["지운 토큰 값"] += n
+            data = text.encode()
         info = tarfile.TarInfo(name)
         info.size = len(data)
         info.mode = 0o600
@@ -222,7 +227,10 @@ def export_bundle(paths: Paths, source: str, out: Path, items: set[str], include
     try:
         if "sessions" in items:
             for s in sessions:
-                tar.add_file(f"sessions/{s['sessionId']}.json", sdir / f"{s['sessionId']}.json", check_secrets=False)
+                rec = load_json(sdir / f"{s['sessionId']}.json", {}) or {}
+                for key in ACCOUNT_BOUND_FIELDS:
+                    rec.pop(key, None)
+                tar.add_json(f"sessions/{s['sessionId']}.json", rec)
             tar.add_json("archived-ids.json", manifest["archived"])
             report.included["세션"] = len(sessions)
         folders: set[str] = set()
@@ -357,22 +365,50 @@ def _repo_root(cwd: str) -> Path | None:
     return None
 
 
+def _main_repo(root: Path) -> Path:
+    """For a linked worktree (.git is a file pointing into <main>/.git/worktrees/<n>), return <main>."""
+    dot = root / ".git"
+    if not dot.is_file():
+        return root
+    text = dot.read_text(encoding="utf-8", errors="ignore").strip()
+    if not text.startswith("gitdir:"):
+        return root
+    gitdir = Path(text.split(":", 1)[1].strip())
+    gitdir = gitdir if gitdir.is_absolute() else (root / gitdir).resolve()
+    common = gitdir / "commondir"
+    if not common.is_file():
+        return root
+    base = Path(common.read_text(encoding="utf-8").strip())
+    base = base if base.is_absolute() else (gitdir / base).resolve()
+    return base.parent if base.name == ".git" else base
+
+
 def _export_repos(paths: Paths, tar: _Tar, sessions: list[dict], sdir: Path, rules, words, report: Report) -> None:
     repos = {}
     for s in sessions:
         rec = load_json(sdir / f"{s['sessionId']}.json", {}) or {}
-        for cwd in (rec.get("originCwd"), rec.get("cwd")):
-            root = _repo_root(cwd) if cwd else None
-            if not root or str(root) in repos:
-                continue
-            url = origin_url(str(root))
-            if not url or (rules and rules.is_company(str(root))) or (words and words.hit(url)):
-                continue
-            repos[str(root)] = {"path": str(root), "url": url, "branches": []}
+        roots = [r for r in (_repo_root(c) for c in (rec.get("originCwd"), rec.get("cwd"), rec.get("worktreePath")) if c) if r]
+        for root in roots:
+            main = _main_repo(root)
+            for other in roots:
+                if other != main and os.path.realpath(other) == os.path.realpath(main):
+                    main = other
+            main = next((Path(k) for k in repos if os.path.realpath(k) == os.path.realpath(main)), main)
+            if str(main) not in repos:
+                url = origin_url(str(main))
+                if not url or (rules and rules.is_company(str(main))) or (words and words.hit(url)):
+                    continue
+                repos[str(main)] = {"path": str(main), "url": strip_userinfo(url), "branches": [], "worktrees": []}
+            entry = repos[str(main)]
+            if root != main and not any(w["path"] == str(root) for w in entry["worktrees"]):
+                entry["worktrees"].append({"path": str(root), "branch": rec.get("branch") if rec.get("worktreePath") else None})
         branch = rec.get("branch")
         root = _repo_root(rec.get("originCwd") or rec.get("cwd") or "")
-        if branch and root and str(root) in repos and branch not in repos[str(root)]["branches"]:
-            repos[str(root)]["branches"].append(branch)
+        key = next((k for k in repos if root and os.path.realpath(k) == os.path.realpath(_main_repo(root))), None)
+        if branch and not rec.get("worktreePath") and key:
+            entry = repos[key]
+            if branch not in entry["branches"]:
+                entry["branches"].append(branch)
     tar.add_json("repos.json", list(repos.values()))
     report.included["저장소 목록"] = len(repos)
 
@@ -394,6 +430,11 @@ def _export_memory(paths: Paths, tar: _Tar, sessions: list[dict], words, company
     if company_present and not include_company:
         report.notes.append("agentmemory: 회사 세션이 있어 기본 번들에서 뺌(--include-company 로 담을 수 있음)")
         return
+    if not include_company:
+        status = unit_status(data, words) if words else "clean"
+        if status != "clean":
+            report.notes.append("agentmemory: 회사 내용이 있거나 검사할 수 없는 데이터라 기본 번들에서 뺌(--include-company 로 담을 수 있음)")
+            return
     if agentmemory_running(paths.home):
         report.notes.append("agentmemory: 서버가 실행 중이라 건너뜀(서버를 멈춘 뒤 다시 실행)")
         return
@@ -529,18 +570,34 @@ def _apply_extracted(args, paths: Paths, work: Path, pm: PathMap) -> int:
                   archived=load_json(work / "archived-ids.json", []) or [])
         troot = work / "transcripts" if "transcripts" in items else None
         actions = plan_sessions(m2, staged, tdir, troot, set(args.only_session) if args.only_session else None)
-        actions = [a for a in actions if not (a.archived and a.reason == "원본 파일 없음")]
+        actions = [a for a in actions if not a.archived]
         skipped += sum(1 for a in actions if a.kind == "skip")
         plan.add(tdir, lambda a=actions, s=staged, t=tdir: apply_sessions(a, s, t))
         report.included["세션 반영"] = sum(1 for a in actions if a.kind != "skip")
+        updated_cli = set()
+        for a in actions:
+            if a.kind == "update":
+                rec = load_json(staged / f"{a.session_id}.json", {}) or {}
+                updated_cli |= {c for c in [rec.get("cliSessionId"), *(rec.get("priorCliSessionIds") or [])] if c}
+        to_archive = []
+        for e in m2["archived"]:
+            dst = load_json(tdir / f"{e['sessionId']}.json")
+            if dst is not None and int(e.get("lastActivityAt") or 0) > int(dst.get("lastActivityAt") or 0):
+                to_archive.append(e)
+        if to_archive:
+            plan.add(tdir, lambda es=to_archive, t=tdir: _mark_archived(es, t))
+            report.notes.append(f"보관 상태 반영 {len(to_archive)}개")
 
     if "transcripts" in items and (work / "transcripts").is_dir():
         for folder in sorted(p for p in (work / "transcripts").iterdir() if p.is_dir()):
             new = paths.projects_root / pm.map_project_dir(folder.name)
             for f in iter_files(folder):
-                dest = new / f.relative_to(folder)
-                if dest.exists():
+                rel = f.relative_to(folder)
+                dest = new / rel
+                owner = rel.parts[0].removesuffix(".jsonl")
+                if dest.exists() and owner not in updated_cli:
                     skipped += 1
+                    report.notes.append(f"대화 기록 {rel.parts[0]}: 대상에 이미 있어 건너뜀(그 세션은 대상이 더 최근)")
                     continue
                 fn = (lambda s=f, d=dest: rewrite_jsonl(s, d, pm)) if f.suffix == ".jsonl" else (lambda s=f, d=dest: _copy_into(s, d))
                 plan.add(dest, fn)
@@ -633,7 +690,9 @@ def _apply_extracted(args, paths: Paths, work: Path, pm: PathMap) -> int:
             if not args.clone:
                 report.notes.append(f"저장소 {dest}: {r['url']} (--clone 으로 받을 수 있음)")
                 continue
-            plan.add(dest, lambda r=r, d=dest: _clone(r, d, report))
+            for w in r.get("worktrees", []):
+                plan.touch(Path(pm.apply(w["path"])))
+            plan.add(dest, lambda r=r, d=dest: _clone(r, d, pm, report))
 
     if "plugins" in items and (work / "plugins.json").is_file():
         pl = load_json(work / "plugins.json")
@@ -652,26 +711,62 @@ def _apply_extracted(args, paths: Paths, work: Path, pm: PathMap) -> int:
     if app_is_running():
         print("Claude 앱이 실행 중입니다. 앱을 완전히 종료(⌘Q)한 뒤 다시 실행하세요.", file=sys.stderr)
         return 3
-    print(f"백업: {backup(plan.roots, paths.state_dir)}")
+    archive = backup(plan.roots, paths.state_dir)
+    print(f"백업: {archive}")
     for fn in plan.ops:
         fn()
+    mark_applied(archive)
     for line in report.lines():
         print(line)
     print("같은 세션을 두 기기에서 동시에 이어가지 마세요.")
     return 2 if skipped else 0
 
 
-def _clone(r: dict, dest: Path, report: Report) -> None:
+def _mark_archived(entries: list[dict], tdir: Path) -> None:
+    idx_path = tdir / "archived-sessions.idx"
+    idx = load_json(idx_path, {}) or {}
+    archived = list(idx.get("archived", []))
+    for e in entries:
+        p = tdir / f"{e['sessionId']}.json"
+        rec = load_json(p, {}) or {}
+        rec["isArchived"] = True
+        rec["lastActivityAt"] = e.get("lastActivityAt", rec.get("lastActivityAt"))
+        write_json(p, rec)
+        if e["sessionId"] not in archived:
+            archived.append(e["sessionId"])
+    idx["archived"] = archived
+    write_json(idx_path, idx)
+
+
+def _remote_has(dest: Path, branch: str) -> bool:
+    return bool(subprocess.run(["git", "-C", str(dest), "ls-remote", "--heads", "origin", branch],
+                               capture_output=True, text=True).stdout.strip())
+
+
+def _clone(r: dict, dest: Path, pm: PathMap, report: Report) -> None:
     dest.parent.mkdir(parents=True, exist_ok=True)
     res = subprocess.run(["git", "clone", "-q", r["url"], str(dest)], capture_output=True, text=True)
     if res.returncode != 0:
-        report.notes.append(f"저장소 {dest}: 클론 실패")
         print(f"저장소 {dest}: 클론 실패", file=sys.stderr)
         return
+    ready = []
     for branch in r.get("branches", []):
-        heads = subprocess.run(["git", "-C", str(dest), "ls-remote", "--heads", "origin", branch],
-                               capture_output=True, text=True).stdout.strip()
-        if not heads:
+        if not _remote_has(dest, branch):
             print(f"저장소 {dest}: 브랜치 {branch} 원격에 없음 — 건너뜀")
             continue
         subprocess.run(["git", "-C", str(dest), "branch", "--track", branch, f"origin/{branch}"], capture_output=True)
+        ready.append(branch)
+    if len(ready) == 1:
+        subprocess.run(["git", "-C", str(dest), "checkout", "-q", ready[0]], capture_output=True)
+    for w in r.get("worktrees", []):
+        wdest = Path(pm.apply(w["path"]))
+        branch = w.get("branch")
+        if wdest.exists():
+            print(f"워크트리 {wdest}: 이미 있음 — 건너뜀")
+            continue
+        if not branch or not _remote_has(dest, branch):
+            print(f"워크트리 {wdest}: 브랜치 {branch or '(없음)'} 원격에 없음 — 만들지 않음")
+            continue
+        res = subprocess.run(["git", "-C", str(dest), "worktree", "add", "-q", str(wdest), branch], capture_output=True, text=True)
+        if res.returncode != 0:
+            print(f"워크트리 {wdest}: 만들기 실패")

@@ -27,7 +27,7 @@ description: Claude 데스크톱 앱 Code 탭의 세션·하위 세션 연결·�
 4. 터미널 앱에서 실행할 명령을 한 줄씩 준다.
    - 시험: `SM apply --manifest <경로> --to <대상> --only sessions --only-session <세션ID>` → 앱을 열어 그 세션이 보이고 이어지는지 확인
    - 전체: `SM apply --manifest <경로> --to <대상>`
-   - 출력의 `백업:` 경로를 적어 두게 한다. 되돌리기는 앱을 끄고 `SM restore <백업>`.
+   - 출력의 `백업:` 경로를 적어 두게 한다. 되돌리기는 앱을 끄고 `SM restore <백업>`(적용 뒤 바뀐 파일이 있으면 멈춤. 사용자가 원할 때만 `--force`).
 5. 앱을 다시 연 뒤 새 계정 세션에서 4절(finish)을 한다.
 
 ## 3. 다른 기기

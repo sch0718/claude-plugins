@@ -93,9 +93,22 @@ def cmd_apply(args, paths: Paths) -> int:
 
 
 def cmd_restore(args, paths: Paths) -> int:
-    from session_move.backup import restore
-    restore(Path(args.archive))
-    print(f"되돌렸습니다: {args.archive}")
+    from session_move.app import app_is_running
+    from session_move.backup import backup, changed_since, entries, restore
+    archive = Path(args.archive)
+    if app_is_running():
+        print("Claude 앱이 실행 중입니다. 앱을 완전히 종료(⌘Q)한 뒤 다시 실행하세요.", file=sys.stderr)
+        return 3
+    changed = changed_since(archive)
+    if changed and not args.force:
+        print("적용한 뒤에 바뀐 파일이 있습니다. 되돌리면 이 내용이 사라집니다(그래도 하려면 --force):", file=sys.stderr)
+        for p in changed[:50]:
+            print(f"  {p}", file=sys.stderr)
+        return 1
+    targets, _ = entries(archive)
+    print(f"되돌리기 전 상태 백업: {backup(targets, paths.state_dir)}")
+    restore(archive)
+    print(f"되돌렸습니다: {archive}")
     return 0
 
 
@@ -130,6 +143,7 @@ def _parser() -> argparse.ArgumentParser:
 
     r = sub.add_parser("restore", help="적용 전 백업으로 되돌리기(앱을 종료한 뒤)")
     r.add_argument("archive")
+    r.add_argument("--force", action="store_true", help="적용 뒤 바뀐 파일이 있어도 되돌림")
     return p
 
 

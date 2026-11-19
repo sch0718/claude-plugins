@@ -7,7 +7,7 @@ from pathlib import Path
 
 from session_move.app import app_is_running
 from session_move.backlog import merge_backlog
-from session_move.backup import backup
+from session_move.backup import backup, mark_applied
 from session_move.jsonio import load_json, write_json
 from session_move.manifest import SAME_DEVICE_ITEMS, parse_items
 from session_move.paths import Paths
@@ -74,7 +74,8 @@ def cmd_apply_local(args, paths: Paths) -> int:
         print("Claude 앱이 실행 중입니다. 앱을 완전히 종료(⌘Q)한 뒤 다시 실행하세요.", file=sys.stderr)
         return 3
 
-    print(f"백업: {backup([tdir], paths.state_dir)}")
+    archive = backup([tdir], paths.state_dir)
+    print(f"백업: {archive}")
     apply_sessions(actions, sdir, tdir)
     if src_sched is not None:
         merged, added = merge_schedules(src_sched, load_json(tdir / "scheduled-tasks.json", {}), keep_enabled=True)
@@ -86,6 +87,7 @@ def cmd_apply_local(args, paths: Paths) -> int:
         if changed:
             write_json(tdir / "backlog" / "tasks.json", merged)
         print(f"backlog {len(changed)}개 반영")
+    mark_applied(archive)
     done = sum(1 for a in actions if a.kind != "skip")
     skipped = sum(1 for a in actions if a.kind == "skip")
     print(f"세션 {done}개 반영, {skipped}개 건너뜀. 같은 세션을 두 계정에서 동시에 이어가지 마세요.")
