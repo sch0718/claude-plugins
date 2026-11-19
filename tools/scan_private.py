@@ -175,6 +175,7 @@ def _commit_hits(sha: str, rules: list[Rule]) -> list[Hit]:
             target = f"commit {short} (path)"
         elif line.startswith("+"):
             target = f"commit {short} (added line {n})"
+            line = line[1:]
         elif line.startswith("diff --git"):
             target = f"commit {short} (path)"
         else:

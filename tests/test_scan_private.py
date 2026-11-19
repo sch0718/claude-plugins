@@ -116,6 +116,15 @@ class ScanPrivateTest(unittest.TestCase):
                 result = run(["--history"], self.denylist, cwd=repo)
                 self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
 
+    def test_history_treats_added_lines_like_file_lines(self):
+        repo = Path(tempfile.mkdtemp())
+        git(repo, "init", "-q", "-b", "main")
+        (repo / "a.py").write_text("@functools.lru_cache(maxsize=None)\ndef f():\n    pass\n", encoding="utf-8")
+        git(repo, "add", ".")
+        git(repo, "commit", "-q", "-m", "init")
+        self.assertEqual(run(["--all"], self.denylist, cwd=repo).returncode, 0)
+        self.assertEqual(run(["--history"], self.denylist, cwd=repo).returncode, 0)
+
     def test_range_includes_root_commit(self):
         repo = Path(tempfile.mkdtemp())
         git(repo, "init", "-q", "-b", "main")
