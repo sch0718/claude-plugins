@@ -67,6 +67,14 @@ def _email_ok(addr: str) -> bool:
     return any(domain == d or domain.endswith("." + d) for d in ALLOWED_EMAIL_DOMAINS)
 
 
+def _is_url_userinfo(text: str, m: re.Match) -> bool:
+    """SSH remotes (git@host:...) and credentials in URLs (https://user@host) are not email addresses."""
+    if m.group(0).split("@", 1)[0].lower() == "git":
+        return True
+    head = re.split(r"[\s\"'`(<\[]", text[:m.start()])[-1]
+    return "://" in head and "/" not in head.split("://", 1)[1]
+
+
 def scan_text(text: str, rules: list[Rule]) -> list[str]:
     found = []
     norm = normalize(text)
@@ -77,7 +85,8 @@ def scan_text(text: str, rules: list[Rule]) -> list[str]:
             found.append(r.rid)
     if BUILTIN[0][1].search(text):
         found.append(BUILTIN[0][0])
-    if any(not _email_ok(m.group(0)) for m in BUILTIN[1][1].finditer(text)):
+    if any(not _email_ok(m.group(0)) and not _is_url_userinfo(text, m)
+           for m in BUILTIN[1][1].finditer(text)):
         found.append(BUILTIN[1][0])
     return found
 

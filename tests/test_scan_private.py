@@ -68,6 +68,12 @@ class ScanPrivateTest(unittest.TestCase):
         self.assertEqual(self.scan_text("1+x@users.noreply.github.com\n").returncode, 0)
         self.assertEqual(self.scan_text("user@example.com user@example.org\n").returncode, 0)
 
+    def test_ssh_remote_and_url_userinfo_are_not_emails(self):
+        self.assertEqual(self.scan_text("url = git@github.com:o/r.git\n").returncode, 0)
+        self.assertEqual(self.scan_text("https://tok@github.com/o/r.git\n").returncode, 0)
+        self.assertEqual(self.scan_text('"https://user:pw-x@github.com/O/R.git",\n').returncode, 0)
+        self.assertEqual(self.scan_text(f"contact {PLAIN_EMAIL}\n").returncode, 1)
+
     def test_missing_denylist_fails(self):
         missing = self.tmp / "nope.txt"
         self.assertEqual(run(["--stdin"], missing, stdin="x\n").returncode, 2)
