@@ -1,0 +1,10 @@
+{
+  "name": "offline-doc-bundle",
+  "version": "0.1.0",
+  "description": "마크다운 문서를 인터넷 없이 열리는 배포본(HTML 묶음, 목차, 발표용 PDF)으로 만든다. Mermaid를 SVG로 바꾸고 문서 간 링크를 유지한다.",
+  "author": { "name": "sch0718" },
+  "homepage": "https://github.com/sch0718/claude-plugins",
+  "repository": "https://github.com/sch0718/claude-plugins",
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "keywords": ["markdown", "html", "pdf", "offline", "korean"]
+}

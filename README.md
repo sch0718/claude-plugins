@@ -12,6 +12,8 @@ sch0718이 만든 Claude Code 플러그인을 한곳에 모은 비공개 마켓�
 
 | 플러그인 | 설치 | 하는 일 |
 |---|---|---|
+| [architecture-motion](plugins/architecture-motion) | `/plugin install architecture-motion@sch0718-plugins` | 구성 변화·흐름·장애를 브라우저 모션 그래픽으로 |
+| [offline-doc-bundle](plugins/offline-doc-bundle) | `/plugin install offline-doc-bundle@sch0718-plugins` | 마크다운을 폐쇄망에서 열리는 HTML·PDF 배포본으로 |
 | [doclookup](plugins/doclookup) | `/plugin install doclookup@sch0718-plugins` | 문서를 절 단위로 색인해 낱말·ID·링크가 쓰인 곳을 파일:줄로 찾음 |
 | [cascade-fix](plugins/cascade-fix) | `/plugin install cascade-fix@sch0718-plugins` | 리뷰 지적을 작업자 둘·기계 검증·Opus 판가름으로 고침 |
 | [fanout](plugins/fanout) | `/plugin install fanout@sch0718-plugins` | 고칠 것들을 하위 세션에 나눠 맡기고 검토·PR·정리까지 진행 |
