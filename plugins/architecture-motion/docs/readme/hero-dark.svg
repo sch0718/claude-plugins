@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="420" viewBox="0 0 960 420" role="img" aria-labelledby="t d">
+<title id="t">architecture-motion — 시스템 구성 변화를 움직이는 HTML로 보여 주는 Claude Code 플러그인</title>
+<desc id="d">구성의 이전·이후 배치 변화, 요청이 지나가는 흐름, 장애가 번지는 과정을 재생 막대가 있는 HTML+SVG 모션 그래픽으로 만드는 흐름</desc>
+<style>text{font-family:'Pretendard Variable',Pretendard,'Apple SD Gothic Neo','Noto Sans KR',system-ui,sans-serif}</style>
+<defs><marker id="ah-6B7078" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#6B7078"/></marker><marker id="ah-2DD4BF" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#2DD4BF"/></marker><marker id="ah-FBBF24" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#FBBF24"/></marker></defs>
+<rect x="1" y="1" width="958" height="418" rx="28" fill="#0E0F11" stroke="#2A2D33"/>
+<rect x="40" y="36" width="52" height="52" rx="12" fill="#D9F99D"/>
+<rect x="52" y="50" width="12" height="12" rx="3" fill="#18181B" opacity=".5"/><rect x="68" y="50" width="12" height="12" rx="3" fill="#18181B"/><rect x="52" y="66" width="28" height="10" rx="3" fill="#18181B" opacity=".75"/>
+<text x="108" y="66" font-size="30" font-weight="800" fill="#F2F3F5">architecture-motion</text>
+<text x="108" y="88" font-size="13" fill="#A4A8B0">Claude Code 플러그인</text>
+<text x="40" y="132" font-size="17" font-weight="700" fill="#A4A8B0">구성 변화·요청 흐름·장애 전파를 브라우저에서 재생되는 움직이는 그림으로</text>
+<rect x="40" y="160" width="280" height="190" rx="14" fill="#17191D" stroke="#2A2D33" stroke-width="1.5"/>
+<text x="58" y="192" font-size="16" font-weight="700" fill="#F2F3F5">구성 이전/이후</text><text x="58" y="212" font-size="12.5" fill="#A4A8B0">배치가 바뀌는 장면</text>
+<rect x="340" y="160" width="280" height="190" rx="14" fill="#17191D" stroke="#2A2D33" stroke-width="1.5"/>
+<text x="358" y="192" font-size="16" font-weight="700" fill="#F2F3F5">요청 흐름</text><text x="358" y="212" font-size="12.5" fill="#A4A8B0">패킷이 지나가는 길</text>
+<rect x="640" y="160" width="280" height="190" rx="14" fill="#17191D" stroke="#2A2D33" stroke-width="1.5"/>
+<text x="658" y="192" font-size="16" font-weight="700" fill="#F2F3F5">장애 전파</text><text x="658" y="212" font-size="12.5" fill="#A4A8B0">번지는 과정과 대처</text>
+<rect x="58" y="236" width="90" height="86" rx="8" fill="#17191D" stroke="#2A2D33" stroke-width="1.5"/><rect x="168" y="236" width="110" height="86" rx="8" fill="#0F2A27" stroke="#2DD4BF" stroke-width="1.5"/>
+<circle cx="82" cy="270" r="7" fill="#6B7078"/>
+<circle cx="104" cy="270" r="7" fill="#6B7078"/>
+<circle cx="126" cy="270" r="7" fill="#6B7078"/>
+<circle cx="82" cy="298" r="7" fill="#6B7078"/>
+<circle cx="192" cy="262" r="7" fill="#2DD4BF"/><circle cx="192" cy="296" r="7" fill="#2DD4BF"/>
+<circle cx="214" cy="262" r="7" fill="#2DD4BF"/><circle cx="214" cy="296" r="7" fill="#2DD4BF"/>
+<circle cx="236" cy="262" r="7" fill="#2DD4BF"/><circle cx="236" cy="296" r="7" fill="#2DD4BF"/>
+<path d="M150 279 L164 279" stroke="#2DD4BF" stroke-width="2" stroke-linecap="round" marker-end="url(#ah-2DD4BF)"/>
+<rect x="358" y="254" width="64" height="50" rx="8" fill="#17191D" stroke="#2A2D33" stroke-width="1.5"/><text x="390" y="284" font-size="12.5" font-weight="700" text-anchor="middle" fill="#F2F3F5">입구</text>
+<rect x="448" y="254" width="64" height="50" rx="8" fill="#0F2A27" stroke="#2DD4BF" stroke-width="1.5"/><text x="480" y="284" font-size="12.5" font-weight="700" text-anchor="middle" fill="#F2F3F5">서비스</text>
+<rect x="538" y="254" width="64" height="50" rx="8" fill="#17191D" stroke="#2A2D33" stroke-width="1.5"/><text x="570" y="284" font-size="12.5" font-weight="700" text-anchor="middle" fill="#F2F3F5">DB</text>
+<path d="M424 279 L444 279" stroke="#2DD4BF" stroke-width="2" stroke-linecap="round" marker-end="url(#ah-2DD4BF)"/><path d="M514 279 L534 279" stroke="#2DD4BF" stroke-width="2" stroke-linecap="round" marker-end="url(#ah-2DD4BF)"/>
+<circle cx="429" cy="279" r="4" fill="#2DD4BF"/><circle cx="519" cy="279" r="4" fill="#2DD4BF"/>
+<text x="480" y="334" font-size="12" text-anchor="middle" fill="#A4A8B0">재생 막대·속도 조절</text>
+<rect x="662" y="236" width="70" height="44" rx="8" fill="#17191D" stroke="#FBBF24" stroke-width="1.5"/><text x="697" y="263" font-size="12.5" font-weight="700" text-anchor="middle" fill="#FBBF24">✕ 장애</text>
+<rect x="752" y="236" width="70" height="44" rx="8" fill="#17191D" stroke="#2A2D33" stroke-width="1.5"/><text x="787" y="263" font-size="12.5" font-weight="700" text-anchor="middle" fill="#F2F3F5">A</text>
+<rect x="752" y="296" width="70" height="44" rx="8" fill="#17191D" stroke="#2A2D33" stroke-width="1.5"/><text x="787" y="323" font-size="12.5" font-weight="700" text-anchor="middle" fill="#F2F3F5">B</text>
+<path d="M734 258 L748 258" stroke="#FBBF24" stroke-width="2" stroke-linecap="round" marker-end="url(#ah-FBBF24)"/><path d="M715 282 L748 314" stroke="#FBBF24" stroke-width="2" stroke-linecap="round" marker-end="url(#ah-FBBF24)"/>
+<text x="662" y="336" font-size="12" fill="#A4A8B0">초 단위 경과 기록</text>
+<text x="40" y="396" font-size="13" fill="#A4A8B0">결과물은 HTML+SVG 묶음 · 외부 CDN 없음 · MP4·GIF 변환은 하지 않음</text>
+</svg>
