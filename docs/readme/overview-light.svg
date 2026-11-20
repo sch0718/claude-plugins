@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="600" viewBox="0 0 960 600" role="img" aria-labelledby="t d">
+<title id="t">claude-plugins — 플러그인 여섯 개가 이어지는 방식</title>
+<desc id="d">fanout이 하위 세션마다 cascade-fix를 불러 써서 리뷰·수정·PR 병합을 진행하고, 문서 작업은 doclookup으로 찾고 cascade-fix로 검토·수정한 뒤 offline-doc-bundle로 배포본을 만들며, 장애 회고는 architecture-motion 그림을 offline-doc-bundle로 묶고, session-move는 어느 흐름에도 속하지 않고 세션과 계정을 옮기는 관계</desc>
+<style>text{font-family:'Pretendard Variable',Pretendard,'Apple SD Gothic Neo','Noto Sans KR',system-ui,sans-serif}</style>
+<defs><marker id="ah0" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#0F766E"/></marker><marker id="ah1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#B45309"/></marker><marker id="ah2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#6D28D9"/></marker></defs>
+<rect x="1" y="1" width="958" height="598" rx="28" fill="#FAFAF7" stroke="#E4E4E7"/>
+<rect x="40" y="36" width="52" height="52" rx="12" fill="#18181B"/>
+<path d="M54 74L66 52L80 70" fill="none" stroke="#D9F99D" stroke-width="3" stroke-linejoin="round" opacity=".6"/>
+<circle cx="54" cy="74" r="5.5" fill="#D9F99D"/>
+<circle cx="66" cy="52" r="5.5" fill="#D9F99D"/>
+<circle cx="80" cy="70" r="5.5" fill="#D9F99D"/>
+<text x="108" y="66" font-size="30" font-weight="800" fill="#18181B">claude-plugins</text>
+<text x="108" y="88" font-size="13" fill="#71717A">개인 Claude Code 플러그인 마켓플레이스</text>
+<text x="40" y="132" font-size="17" font-weight="700" fill="#71717A">다섯 플러그인이 이어지는 세 가지 흐름</text>
+<rect x="40" y="170" width="170" height="80" rx="14" fill="#FFFFFF" stroke="#E4E4E7" stroke-width="1.5"/>
+<text x="54" y="200" font-size="16" font-weight="700" fill="#18181B">fanout</text>
+<text x="54" y="222" font-size="12.5" fill="#71717A">고칠 것을 나눠</text>
+<text x="54" y="240" font-size="12.5" fill="#71717A">하위 세션에 맡김</text>
+<rect x="40" y="280" width="170" height="80" rx="14" fill="#FFFFFF" stroke="#E4E4E7" stroke-width="1.5"/>
+<text x="54" y="310" font-size="16" font-weight="700" fill="#18181B">doclookup</text>
+<text x="54" y="332" font-size="12.5" fill="#71717A">문서에서 찾기</text>
+<text x="54" y="350" font-size="12.5" fill="#71717A">파일:줄로 답함</text>
+<rect x="275" y="170" width="170" height="190" rx="14" fill="#F0FDFA" stroke="#0F766E" stroke-width="1.5"/>
+<text x="289" y="200" font-size="16" font-weight="700" fill="#0F766E">cascade-fix</text>
+<text x="289" y="222" font-size="12.5" fill="#71717A">리뷰 지적을 하나씩</text>
+<text x="289" y="240" font-size="12.5" fill="#71717A">작업자 둘이 따로 고침</text>
+<text x="289" y="258" font-size="12.5" fill="#71717A">문서 검토·수정도 맡음</text>
+<rect x="275" y="390" width="170" height="80" rx="14" fill="#FFFFFF" stroke="#E4E4E7" stroke-width="1.5"/>
+<text x="289" y="420" font-size="16" font-weight="700" fill="#18181B">architecture-motion</text>
+<text x="289" y="442" font-size="12.5" fill="#71717A">움직이는 그림</text>
+<text x="289" y="460" font-size="12.5" fill="#71717A">구성 변화·장애 시계</text>
+<rect x="510" y="170" width="170" height="80" rx="14" fill="#FFFFFF" stroke="#E4E4E7" stroke-width="1.5"/>
+<text x="524" y="200" font-size="16" font-weight="700" fill="#18181B">PR 병합</text>
+<text x="524" y="222" font-size="12.5" fill="#71717A">하위 세션이 병합</text>
+<text x="524" y="240" font-size="12.5" fill="#71717A">메인이 통합 검증</text>
+<rect x="510" y="280" width="170" height="190" rx="14" fill="#FFFFFF" stroke="#E4E4E7" stroke-width="1.5"/>
+<text x="524" y="310" font-size="16" font-weight="700" fill="#18181B">offline-doc-bundle</text>
+<text x="524" y="332" font-size="12.5" fill="#71717A">인터넷 없이 열리는</text>
+<text x="524" y="350" font-size="12.5" fill="#71717A">HTML 묶음·PDF</text>
+<rect x="745" y="280" width="170" height="80" rx="14" fill="#FFFFFF" stroke="#E4E4E7" stroke-width="1.5" stroke-dasharray="5 4"/>
+<text x="759" y="310" font-size="16" font-weight="700" fill="#18181B">session-move</text>
+<text x="759" y="332" font-size="12.5" fill="#71717A">세션·계정을 옮김</text>
+<text x="759" y="350" font-size="12.5" fill="#71717A">어느 흐름에도 안 속함</text>
+<path d="M214 210L271 210" fill="none" stroke="#0F766E" stroke-width="2" stroke-linecap="round" marker-end="url(#ah0)"/>
+<text x="242.5" y="202" font-size="12" font-weight="600" text-anchor="middle" fill="#0F766E">호출</text>
+<path d="M449 210L506 210" fill="none" stroke="#0F766E" stroke-width="2" stroke-linecap="round" marker-end="url(#ah0)"/>
+<text x="477.5" y="202" font-size="12" font-weight="600" text-anchor="middle" fill="#0F766E">준비됨</text>
+<path d="M214 320L271 320" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" marker-end="url(#ah1)"/>
+<text x="242.5" y="312" font-size="12" font-weight="600" text-anchor="middle" fill="#B45309">찾은 곳</text>
+<path d="M449 320L506 320" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" marker-end="url(#ah1)"/>
+<text x="477.5" y="312" font-size="12" font-weight="600" text-anchor="middle" fill="#B45309">배포본</text>
+<path d="M449 430L506 430" fill="none" stroke="#6D28D9" stroke-width="2" stroke-linecap="round" marker-end="url(#ah2)"/>
+<text x="477.5" y="422" font-size="12" font-weight="600" text-anchor="middle" fill="#6D28D9">그림</text>
+<text x="40" y="560" font-size="13" fill="#71717A">흐름 밖: session-move는 어느 선에도 연결되지 않고 세션·계정을 옮길 때만 따로 써요</text>
+<path d="M40 520L66 520" stroke="#0F766E" stroke-width="3" stroke-linecap="round"/>
+<text x="74" y="525" font-size="13" font-weight="600" fill="#18181B">리뷰 → 수정 → 병합</text>
+<path d="M260 520L286 520" stroke="#B45309" stroke-width="3" stroke-linecap="round"/>
+<text x="294" y="525" font-size="13" font-weight="600" fill="#18181B">문서 작업</text>
+<path d="M389 520L415 520" stroke="#6D28D9" stroke-width="3" stroke-linecap="round"/>
+<text x="423" y="525" font-size="13" font-weight="600" fill="#18181B">장애 회고</text>
+</svg>

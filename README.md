@@ -1,5 +1,12 @@
 # claude-plugins
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/readme/overview-dark.svg">
+    <img src="docs/readme/overview-light.svg" width="960" alt="claude-plugins 소개: fanout이 하위 세션마다 cascade-fix를 불러 리뷰·수정·PR 병합을 진행하고, 문서 작업은 doclookup으로 찾아 cascade-fix로 고친 뒤 offline-doc-bundle로 배포본을 만들며, 장애 회고는 architecture-motion 그림을 offline-doc-bundle로 묶고, session-move는 어느 흐름에도 속하지 않고 세션·계정을 옮기는 관계">
+  </picture>
+</p>
+
 sch0718이 만든 Claude Code 플러그인 여섯 개를 한곳에 모은 비공개 마켓플레이스예요. 아래에서 무엇이 있는지, 어떤 상황에 쓰는지 보고 필요한 것만 설치하면 돼요.
 
 ## 설치
@@ -99,6 +106,25 @@ Claude 데스크톱 앱 Code 탭의 세션을 같은 기기의 다른 계정으�
 - **리뷰 → 수정 → 병합:** cascade-fix가 지적 하나하나를 고치고, 고칠 것이 여럿이면 fanout이 세션으로 나눠 병렬로 돌려요. fanout의 각 세션이 cascade-fix를 불러 써요.
 - **문서 작업:** doclookup으로 바꿀 곳을 찾고, cascade-fix로 문서를 검토·수정하고, offline-doc-bundle로 배포본을 만들어요.
 - **장애 회고 발표:** architecture-motion으로 움직이는 그림을 만들고, offline-doc-bundle로 회고 문서와 함께 묶어요.
+
+### 움직이는 그림으로 보기
+
+위 세 조합이 어떻게 이어지는지는 [`docs/motion`](docs/motion)에 모션 그래픽으로 만들어 뒀어요. 외부 CDN 없는 정적 HTML이에요. 첫 장면은 「고칠 것이 쌓였다 → fanout이 나눈다 → 하위 세션마다 cascade-fix로 고친다 → PR 병합 → 통합 검증」이고, 문서 작업과 장애 회고는 위쪽 관점 버튼으로 바꿔 볼 수 있어요.
+
+GitHub README에서는 스크립트가 실행되지 않아요. `docs/motion` 폴더를 내려받아 아래처럼 열어 주세요.
+
+```
+cd docs/motion
+python3 -m http.server 8000
+```
+
+그다음 브라우저에서 `http://localhost:8000/`을 열어요. `index.html`을 브라우저로 바로 열어도 되지만 스크립트가 붙지 않는 경우가 있어서 서버를 권해요. 주소 끝에 `?view=` 값을 붙이면 처음 볼 관점을 고를 수 있어요.
+
+| `?view=` | 관점 |
+|---|---|
+| `fanout` | 리뷰 → 수정 → 병합 (기본) |
+| `docs` | 문서 작업 |
+| `incident` | 장애 회고 |
 
 ## 저장소 규칙
 

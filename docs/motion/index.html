@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>아키텍처 모션</title>
+<link rel="stylesheet" href="motion.css">
+</head>
+<body>
+<div id="viewbar">
+  <span class="vb-label" id="vb-label">관점</span>
+  <div class="vb-group" role="radiogroup" aria-labelledby="vb-label"></div>
+  <span id="vb-desc"></span>
+</div>
+<div id="viewport"><div id="stage"><svg id="svg" viewBox="0 0 1600 900" role="img" aria-label="아키텍처 모션 그래픽"></svg><div id="cap"></div></div></div>
+<div id="controls"></div>
+<script src="motion.js"></script>
+<script src="diagram.js"></script>
+<script src="scenes.js"></script>
+<script>
+// 이 파일은 고치지 않는다. 장면은 scenes.js 의 window.SCENES, 관점 간 장 대응은 window.SCENE_MAP 으로 준다.
+(function () {
+  const q = new URLSearchParams(location.search);
+  if (q.get('export') === '1') document.documentElement.classList.add('export');
+  if (window.SCENE_TITLE) document.title = window.SCENE_TITLE;
+  const keys = Object.keys(SCENES);
+  let view = keys.includes(q.get('view')) ? q.get('view') : keys[0];
+
+  const mmss = v => Math.floor(v / 60) + '분' + (Math.round(v % 60) ? ' ' + Math.round(v % 60) + '초' : '');
+  const lengths = {}, chapterCount = {};
+  for (const k of keys) { SCENES[k].build(); lengths[k] = M.dur / M.base; chapterCount[k] = M.chapters.length; }
+
+  const bar = document.getElementById('viewbar');
+  if (keys.length < 2) bar.style.display = 'none';
+  const group = bar.querySelector('.vb-group');
+  const desc = document.getElementById('vb-desc');
+  const buttons = {};
+  for (const k of keys) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.setAttribute('role', 'radio');
+    b.innerHTML = `<b>${SCENES[k].label}</b><span>${mmss(lengths[k])}</span>`;
+    b.addEventListener('click', () => setView(k));
+    group.appendChild(b);
+    buttons[k] = b;
+  }
+
+  function mark(switched) {
+    for (const k in buttons) buttons[k].setAttribute('aria-checked', String(k === view));
+    desc.textContent = SCENES[view].desc || '';
+    const u = new URL(location.href);
+    u.searchParams.set('view', view);
+    if (switched) u.searchParams.delete('t');
+    history.replaceState(null, '', u);
+  }
+
+  // 관점을 바꾸면 대응하는 장으로 이어 본다. SCENE_MAP 이 없으면 진행 비율로 고른다
+  function targetChapter(from, to, idx) {
+    const m = window.SCENE_MAP && SCENE_MAP[from] && SCENE_MAP[from][to];
+    if (m && m[idx] != null) return m[idx];
+    return Math.min(chapterCount[to] - 1, Math.floor(idx / chapterCount[from] * chapterCount[to]));
+  }
+
+  function setView(next) {
+    if (next === view) return;
+    const target = targetChapter(view, next, M.chapterAt());
+    const playing = M.playing;
+    view = next;
+    M.load(SCENES[view].build);
+    M.seek(M.toPlay(M.chapters[target].t) + 0.02);
+    if (playing) M.play(); else M.pause();
+    mark(true);
+  }
+
+  SCENES[view].build();
+  mark();
+  M.start();
+})();
+</script>
+</body>
+</html>
