@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="420" viewBox="0 0 960 420" role="img" aria-labelledby="t d">
+<title id="t">offline-doc-bundle — 마크다운을 인터넷 없이 열리는 배포본으로 만드는 Claude Code 플러그인</title>
+<desc id="d">마크다운이 Mermaid를 SVG로 바꾸고 링크를 .md에서 .html로 고치는 변환을 거쳐, 목차 바와 목차 페이지, 배포 제외 처리, 검증을 지나 인터넷 없이 열리는 HTML 묶음·목차·PDF가 되는 흐름</desc>
+<style>text{font-family:'Pretendard Variable',Pretendard,'Apple SD Gothic Neo','Noto Sans KR',system-ui,sans-serif}</style>
+<defs><marker id="ah-2DD4BF" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#2DD4BF"/></marker><marker id="ah-6B7078" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#6B7078"/></marker></defs>
+<rect x="1" y="1" width="958" height="418" rx="28" fill="#0E0F11" stroke="#2A2D33"/>
+<rect x="40" y="36" width="52" height="52" rx="12" fill="#D9F99D"/>
+<path d="M54 46H70L78 54V80H54z" fill="none" stroke="#18181B" stroke-width="3.5" stroke-linejoin="round"/>
+<rect x="59" y="62" width="14" height="3.5" rx="1.75" fill="#18181B"/><rect x="59" y="70" width="10" height="3.5" rx="1.75" fill="#18181B"/>
+<text x="108" y="66" font-size="30" font-weight="800" fill="#F2F3F5">offline-doc-bundle</text>
+<text x="108" y="88" font-size="13" fill="#A4A8B0">Claude Code 플러그인</text>
+<text x="40" y="132" font-size="17" font-weight="700" fill="#A4A8B0">마크다운을 인터넷 없이 열리는 HTML 묶음·목차·PDF로 만든다</text>
+<rect x="40" y="232" width="170" height="76" rx="14" fill="#17191D" stroke="#2A2D33" stroke-width="1.5"/><text x="56" y="266" font-size="16" font-weight="700" fill="#F2F3F5">마크다운</text><text x="56" y="287" font-size="12.5" fill="#A4A8B0">문서 모음</text>
+<rect x="246" y="232" width="200" height="76" rx="14" fill="#17191D" stroke="#2A2D33" stroke-width="1.5"/><text x="262" y="266" font-size="16" font-weight="700" fill="#F2F3F5">Mermaid → SVG</text><text x="262" y="287" font-size="12.5" fill="#A4A8B0">링크 .md → .html</text>
+<rect x="482" y="192" width="190" height="64" rx="14" fill="#17191D" stroke="#2A2D33" stroke-width="1.5"/><text x="498" y="226" font-size="16" font-weight="700" fill="#F2F3F5">목차 바 · 목차</text><text x="498" y="247" font-size="12.5" fill="#A4A8B0">← 목차, index.html</text>
+<rect x="482" y="284" width="190" height="64" rx="14" fill="#17191D" stroke="#2A2D33" stroke-width="1.5"/><text x="498" y="318" font-size="16" font-weight="700" fill="#F2F3F5">배포 제외 · 검증</text><text x="498" y="339" font-size="12.5" fill="#A4A8B0">미배포 뱃지, verify</text>
+<rect x="736" y="174" width="184" height="64" rx="14" fill="#0F2A27" stroke="#2DD4BF" stroke-width="1.5"/><text x="752" y="208" font-size="16" font-weight="700" fill="#2DD4BF">HTML 묶음</text><text x="752" y="229" font-size="12.5" fill="#A4A8B0">외부 참조 0</text>
+<rect x="736" y="244" width="184" height="64" rx="14" fill="#17191D" stroke="#2A2D33" stroke-width="1.5"/><text x="752" y="278" font-size="16" font-weight="700" fill="#F2F3F5">목차 페이지</text><text x="752" y="299" font-size="12.5" fill="#A4A8B0">분류·한 줄 설명</text>
+<rect x="736" y="314" width="184" height="64" rx="14" fill="#17191D" stroke="#2A2D33" stroke-width="1.5"/><text x="752" y="348" font-size="16" font-weight="700" fill="#F2F3F5">발표용 PDF</text><text x="752" y="369" font-size="12.5" fill="#A4A8B0">Marp 슬라이드</text>
+<path d="M210 270 C222 270 228 270 240 270" fill="none" stroke="#6B7078" stroke-width="2" stroke-linecap="round" marker-end="url(#ah-6B7078)"/>
+<path d="M446 270 C462 270 462 224 476 224" fill="none" stroke="#6B7078" stroke-width="2" stroke-linecap="round" marker-end="url(#ah-6B7078)"/>
+<path d="M446 270 C462 270 462 316 476 316" fill="none" stroke="#6B7078" stroke-width="2" stroke-linecap="round" marker-end="url(#ah-6B7078)"/>
+<path d="M672 224 C694 224 690 270 706 270" fill="none" stroke="#6B7078" stroke-width="2" stroke-linecap="round"/>
+<path d="M672 316 C694 316 690 270 706 270" fill="none" stroke="#6B7078" stroke-width="2" stroke-linecap="round"/>
+<path d="M706 270 C722 270 722 206 730 206" fill="none" stroke="#2DD4BF" stroke-width="2" stroke-linecap="round" marker-end="url(#ah-2DD4BF)"/>
+<path d="M706 270 C718 270 722 276 730 276" fill="none" stroke="#6B7078" stroke-width="2" stroke-linecap="round" marker-end="url(#ah-6B7078)"/>
+<path d="M706 270 C722 270 722 346 730 346" fill="none" stroke="#6B7078" stroke-width="2" stroke-linecap="round" marker-end="url(#ah-6B7078)"/>
+<text x="40" y="396" font-size="13" fill="#A4A8B0">변환은 프로젝트 스크립트나 marp·mmdc가 맡고, 뒷정리·검증은 bundle.py가 맡음 · 표준 라이브러리만 사용</text>
+</svg>
