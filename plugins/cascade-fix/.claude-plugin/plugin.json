@@ -1,6 +1,6 @@
 {
   "name": "cascade-fix",
-  "version": "1.6.8",
+  "version": "1.7.0",
   "description": "리뷰 지적(Claude·Codex·Cursor 리뷰, PR 코멘트)을 싼 작업자 둘이 독립으로 고치고, 기계 검증·합의로 채택하며, 갈린 것만 Opus가 판가름한다. Claude 단독으로도 돌고, 역할 프로필로 첫 검토·작업자·의견·재검토를 Claude·Codex·Cursor에 나눠 맡길 수 있다.",
   "author": { "name": "sch0718" },
   "homepage": "https://github.com/sch0718/claude-plugins",

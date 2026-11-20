@@ -1,0 +1,23 @@
+# 프로파일링 기능 설계·계획 (cascade-fix 1.7.0)
+
+전제: 사용자 1명, 이 맥 한 대, 무료 운영. 이미 있는 것으로는 안 되는 이유: 실행 원장(`ledger.json`)은 실행 폴더에만 있고 Codex·Cursor 토큰은 임시 환경이라 지나면 사라진다. 그래서 실행 끝에 사용 기록만 따로 보관하고 모아 본다.
+
+## 범위
+설정 토글, `CF profile on|off|status|report|import-sessions`, report 시점 기록 저장. 범위 밖: 단가표 추가, 대시보드, 자동 삭제, 원격 전송.
+
+## 설계
+- 새 코드는 `cascade/profile.py` 한 모듈. `cli.py`는 하위 명령 등록(`add("profile", ...)`)과 `cmd_report` 끝의 호출 한 줄만 건드린다.
+- **설정**: 최상위 `profiling = true|false`(기본 꺼짐). 우선순위: 환경 변수 `CASCADE_PROFILING`(1/0) > 설정 파일 > 기본값. 읽기 경로는 `cli_steps`의 기존 해석(`CASCADE_REPOS_TOML` > `USER_REPOS_TOML` > 예전 위치)을 그대로 쓴다. `CASCADE_REPOS_TOML`이 잡혀 있으면 기존 `toml_edit.locate`처럼 `on`·`off`는 파일을 바꾸지 않고 오류를 낸다(`status`는 그 경로를 읽는다). on/off 쓰기는 `toml_edit`에 `set_profiling(text, bool)`을 `set_default_profile`과 같은 방식(최상위 키 갱신·없으면 첫 표 앞에 삽입, `_checked`로 검증)으로 더하고, 파일 쓰기는 `setup`이 쓰는 `toml_edit.locate/base_text/write_checked` 흐름을 따른다. `config.py`에는 읽기 함수 `profiling_setting(path) -> (bool|None)`만 더한다(`tomllib`).
+- **기록 저장**: `cmd_report`가 `report.md`를 쓴 뒤 `profile.record_run(ledger, run_dir)` 한 줄. 꺼져 있으면 즉시 반환. 저장 실패는 경고 한 줄만 찍고 report는 종료 코드 0 그대로. 파일은 `~/.claude/cascade-fix/profile/<run_id>.json`(환경 변수 `CASCADE_PROFILE_DIR`로 바꿀 수 있다: 시험용). run_id는 저장소별로만 유일하므로 기록에 `repo_id`(`sha1(ledger.root)` 앞 8자리, 경로 자체는 안 넣음)를 넣고, 같은 이름 파일이 있는데 `repo_id`가 다르면 `<run_id>-<repo_id>.json`에 쓴다. 같은 실행을 report로 다시 만들면 그 파일을 덮어쓴다.
+- **기록 내용**: `report.py`의 입력을 그대로 모은다. 칸은 `_calls_section`이 표로 내는 것과 같은 칸 집합이다: `assignment.work_keys` 칸(호출 수 `_cell_calls`, 대체 사유 `_worker_fallbacks`), 그리고 첫 검토(`<mode>.review`)·의견(`opinion`)·재검토(`recheck`) 칸(`_first_review_runner`·`_first_review_attempts`·`_opinion_runner`·`_recheck_runner`·`_review_rows`가 쓰는 입력, 기존 `tests/test_report.py`의 첫 검토·혼합 의견 사례와 같은 수치). 토큰·비용: Claude는 `_ClaudeUsage`의 저장된 rows(`first_review_rows` 포함)만 쓴다(단가로 다시 계산하지 않고 저장된 `cost`를 쓴다, 없으면 null). Claude 외 CLI(Codex·Cursor)는 `_worker_fallbacks`의 칸별 tokens를 쓰되 Claude CLI 시도는 Claude rows와 겹치므로 빼고 한 번만 센다. 캐시 읽기는 CLI 쪽엔 없으면 null, 미측정(`UNRECORDED`)은 0이 아니라 null. 회차 시간은 `report._elapsed`에서 초 계산을 `_elapsed_seconds(rnd) -> int|None`로 뽑아 공유한다(`_elapsed`는 그 결과를 글자로 바꿈).
+- 형식(`version: 1`): `{version, run_id, repo_id, date, mode, profile, repo, cascade_fix_version, workflows:[wf_…], cells:{"code.a":{requested:{runner,model,effort}, calls, fallbacks:{사유:건수}, actual:[{runner, model, calls, tokens:{input,output,cache_read,cache_write}|null, cost:float|null}]}}, rounds:[{no, elapsed_seconds}]}`. 한 칸에 러너·모델이 섞여도 `actual`에 따로 남는다. `workflows`는 `claude-usage.json`의 `workflows` 키(Workflow 실행 id)다. `repo`는 `Path(ledger.root).name`. 지적 본문·코드·경로 전체는 넣지 않는다.
+- **집계** `CF profile report [--since YYYY-MM-DD] [--by role|model|runner|repo|week] [--json]`: `profile/*.json`+`imported-claude.json`의 레코드를 `actual` 항목 단위로 펼쳐 `--by` 키(기본 role×model)로 묶어 호출 수·토큰·비용·호출당 평균·대체 건수를 낸다. 대체 건수는 칸 단위 값이라 그 칸의 첫 `actual` 항목에만 얹는다. 단가 없는 모델(cost null)은 「단가 모름」으로 표시하고 합계에서 따로 센다. 표 아래 한 줄씩: ① 요청 모델과 실제 모델이 다른 칸 수(`requested.model`이 있는데 어느 `actual.model`과도 다른 칸, 가져온 기록은 제외). ② 전체 비용 중 캐시 쓰기 비율 = 각 항목의 `cache_write` 토큰 × `usage.PRICES`의 cache_write 단가 합 ÷ 전체 비용(5분 TTL 기준의 추정이라고 적는다. 단가 없는 항목만 있으면 「알 수 없음」).
+- **가져오기** `CF profile import-sessions [--since D]`: `~/.claude/projects/**/journal.jsonl`(환경 변수 `CASCADE_PROJECTS_ROOT`로 바꿀 수 있다: 시험용)를 `usage.read_workflow(dir)`로 읽는다. 라벨 규칙은 임시 분석 스크립트와 같다: `^\S+ (a|b|adjudicator|opinion|recheck|writer|checker|judge_a|judge_b)$` 또는 `code review`/`doc review`(작업 id는 `r1-01`처럼 모드 표시가 없다). 이런 라벨이 하나도 없는 Workflow는 건너뛰고, 있으면 그 라벨만 센다. 레코드: `{source:"claude-session", workflow_id(폴더 이름), date(journal 수정 시각), role, mode, model, calls, tokens, cost}`; mode는 a·b→code, writer·checker·judge_a·judge_b→doc, `code review`/`doc review`는 라벨대로, 그 밖에는 `unknown`. repo는 `(가져옴)`으로 묶는다. **이중 집계 방지**: 저장된 실행 기록의 `workflows`에 든 `workflow_id`는 가져오기에서 제외한다. 읽다 실패한 journal은 건너뛰고 건수만 알린다. 파일은 `profile/imported-claude.json` 하나(다시 돌리면 통째로 새로 씀).
+- **문서**: SKILL.md「프로파일링」절(짧게), `docs/reference.md`, README 변경 이력 1.7.0. SKILL 1~14단계는 바꾸지 않는다(프로파일링이 켜져 있어도 묻거나 멈추지 않는다).
+- **버전**: plugin.json·marketplace.json 1.6.8→1.7.0, `tests/test_config.py` 시험값.
+
+## 순서(각 단계 끝에 해당 새 시험을 돌린다)
+1. `config.py`·`toml_edit.py` 설정 읽기·쓰기. 2. `profile.py`(설정 해석, 기록, 집계, 가져오기, 명령). 3. `cli.py` 등록·호출. 4. 문서·버전. 5. `tests/test_profile.py`.
+
+## 검증
+`tests/test_profile.py`(`profile status`는 `--run-dir` 없이 도는지, 기록 저장이 실패해도 report가 0인지 포함): 꺼짐이면 파일 없음·report 출력 같음 / 켜짐이면 JSON 생성·본문 없음 / on·off·status와 환경 변수 우선 / 집계(role×model, --by, --since, 단가 모름, 혼합 러너 칸) / import-sessions 가짜 journal 한 쌍(역할 판별·이중 집계 제외). 기존 `tests/test_report.py`·`test_config.py`·`test_toml_edit.py`가 그대로 통과. 끝에 플러그인 폴더에서 `python3 -m unittest discover -s tests` 1회, 저장소 루트에서 `python3 -m unittest tests.test_marketplace`.

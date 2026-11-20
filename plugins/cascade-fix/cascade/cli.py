@@ -15,7 +15,7 @@ from pathlib import Path
 
 from cascade import assignment
 from cascade import cli_steps as s
-from cascade import profiles, recommend, setup, skill_scripts, toml_edit
+from cascade import profile, profiles, recommend, setup, skill_scripts, toml_edit
 from cascade import usage as workflow_usage
 from cascade.config import ConfigError, ExitCodes
 from cascade.consensus import (
@@ -1782,6 +1782,7 @@ def cmd_report(args) -> int:
         s.save_ledger(run_dir, ledger)
     print(text)
     print(f"보고서: {run_dir / 'report.md'} · 준비됨: {run_dir / 'prepared'}")
+    profile.record_run(ledger, run_dir)
     return 0
 
 
@@ -2636,6 +2637,7 @@ def build_parser() -> argparse.ArgumentParser:
     p = add("resume", cmd_resume)
     p.add_argument("--choices", required=True)
     add("report", cmd_report, force=False)
+    profile.register(add("profile", None, run_dir=False, force=False))
     add("cleanup", cmd_cleanup)
     add("status", cmd_status, force=False)
     return parser

@@ -50,6 +50,17 @@ def has_repos(path: Path) -> bool:
         return False
 
 
+def profiling_setting(path: Path) -> bool | None:
+    try:
+        with path.open("rb") as f:
+            value = tomllib.load(f).get("profiling")
+    except FileNotFoundError:
+        return None
+    if value is not None and not isinstance(value, bool):
+        raise ConfigError("profiling은 true 또는 false로 적어야 한다")
+    return value
+
+
 def load_repo_config(root: Path, config_path: Path) -> RepoConfig | None:
     config_path = Path(config_path)
     if not config_path.is_file():

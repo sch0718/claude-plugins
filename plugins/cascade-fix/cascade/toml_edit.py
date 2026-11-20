@@ -117,7 +117,10 @@ def _default_profile_text(text: str, name: str) -> str:
     if found is not None:
         lines[found] = _set_assignment(lines[found], "default_profile", name)
         return "".join(lines)
-    entry = f"default_profile = {_quote(name)}\n"
+    return _insert_top_level(text, lines, first_table, f"default_profile = {_quote(name)}\n")
+
+
+def _insert_top_level(text: str, lines: list[str], first_table: int, entry: str) -> str:
     if first_table < len(lines):
         at = _table_comment_start(lines, first_table)
         lines[at:at] = [entry, "\n"]
@@ -126,6 +129,26 @@ def _default_profile_text(text: str, name: str) -> str:
     if head and head.splitlines()[-1].strip():
         head += "\n"
     return head + entry
+
+
+def set_profiling(text: str, enabled: bool) -> str:
+    expected = {**_parse(text), "profiling": enabled}
+    value = "true" if enabled else "false"
+    entry = f"profiling = {value}"
+    lines = text.splitlines(keepends=True)
+    first_table = _next_table(lines, 0)
+    key = r"""(?:profiling|"profiling"|'profiling')"""
+    found = _find_assignment(lines, key, 0, first_table)
+    if found is None:
+        out = _insert_top_level(text, lines, first_table, entry + "\n")
+    else:
+        line = lines[found]
+        lines[found], count = re.subn(rf"^(\s*{key}\s*=\s*)(?:true|false)(?=\s|#|$)",
+                                      lambda m: m[1] + value, line)
+        if not count:
+            lines[found] = entry + "\n"
+        out = "".join(lines)
+    return _checked(out, expected, f"맨 위에 {entry}")
 
 
 def _repo_key(repos: dict, root: Path) -> str | None:

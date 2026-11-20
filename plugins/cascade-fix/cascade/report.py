@@ -473,16 +473,22 @@ def _parse_time(value: str) -> datetime | None:
         return None
 
 
-def _elapsed(rnd) -> str:
+def _elapsed_seconds(rnd) -> int | None:
     times = [t for t in (_parse_time(e.get("at", "")) for e in rnd.events if e.get("step") not in UNTIMED_STEPS)
              if t is not None]
     if len(times) < 2:
-        return "-"
+        return None
     try:
-        seconds = int((times[-1] - times[0]).total_seconds())
+        return max(0, int((times[-1] - times[0]).total_seconds()))
     except TypeError:
+        return None
+
+
+def _elapsed(rnd) -> str:
+    seconds = _elapsed_seconds(rnd)
+    if seconds is None:
         return "-"
-    minutes, rest = divmod(max(seconds, 0), 60)
+    minutes, rest = divmod(seconds, 60)
     return f"{minutes}분 {rest}초" if minutes else f"{rest}초"
 
 
