@@ -1,5 +1,12 @@
 # session-move
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/readme/hero-dark.svg">
+    <img src="docs/readme/hero-light.svg" width="960" alt="session-move 소개: 같은 기기에서는 export·apply로 계정을 전환하고, 다른 기기로는 sessions.tar.gz 번들을 만들어 대상 기기에서 apply하는 흐름">
+  </picture>
+</p>
+
 Claude 데스크톱 앱 Code 탭의 세션을 같은 기기의 다른 계정으로, 또는 번들로 묶어 다른 기기로 옮깁니다. 기본은 같은 기기 계정 전환입니다.
 
 ## 설치
@@ -90,3 +97,15 @@ Cowork 세션, 커넥터 인증, Remote Control, PR Auto-fix 감시, claude.ai�
 ```
 cd plugins/session-move && python3 -m unittest discover -s tests
 ```
+
+## 라이선스
+
+[PolyForm Noncommercial 1.0.0](LICENSE)입니다. 소스를 공개하지만 오픈소스 라이선스는 아닙니다.
+
+- 개인 사용, 학습·연구, 비영리 단체·교육·공공 기관의 사용은 자유롭게 할 수 있습니다. 고쳐 쓰는 것도 됩니다.
+- 상업적 목적의 사용은 할 수 없습니다. 회사 업무에 쓰는 것도 여기에 들어갑니다. 상업적으로 쓰려면 따로 문의해 주세요.
+- 복사본이나 고친 판을 다른 사람에게 줄 때는 라이선스 전문(또는 URL)과 아래 줄을 함께 넘겨 출처를 밝혀야 합니다.
+
+  ```
+  Required Notice: Copyright (c) 2026 신춘호 (sch0718) (https://github.com/sch0718/claude-plugins/tree/main/plugins/session-move)
+  ```

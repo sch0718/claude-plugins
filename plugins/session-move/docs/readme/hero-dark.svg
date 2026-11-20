@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="420" viewBox="0 0 960 420" role="img" aria-labelledby="t d">
+<title id="t">session-move — 세션을 다른 계정이나 기기로 옮기는 Claude Code 플러그인</title>
+<desc id="d">같은 기기에서는 export와 apply로 계정을 전환하고, 다른 기기로는 sessions.tar.gz 번들을 만들어 대상 기기에서 apply하는 흐름</desc>
+<style>text{font-family:'Pretendard Variable',Pretendard,'Apple SD Gothic Neo','Noto Sans KR',system-ui,sans-serif}</style>
+<defs><marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#2DD4BF"/></marker><marker id="g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#6B7078"/></marker></defs>
+<rect x="1" y="1" width="958" height="418" rx="28" fill="#0E0F11" stroke="#2A2D33"/>
+<rect x="40" y="36" width="52" height="52" rx="12" fill="#D9F99D"/>
+<path d="M50 56H74M68 50L74 56L68 62M74 74H50M56 68L50 74L56 80" fill="none" stroke="#18181B" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="108" y="66" font-size="30" font-weight="800" fill="#F2F3F5">session-move</text>
+<text x="108" y="88" font-size="13" fill="#A4A8B0">Claude Code 플러그인</text>
+<text x="40" y="132" font-size="17" font-weight="700" fill="#A4A8B0">같은 기기는 계정 전환으로, 다른 기기는 번들로 옮긴다</text>
+<text x="40" y="164" font-size="12" font-weight="600" fill="#A4A8B0">같은 기기 · 계정 전환</text>
+<rect x="40" y="174" width="250" height="60" rx="14" fill="#17191D" stroke="#2A2D33" stroke-width="1.5"/><text x="56" y="201" font-size="16" font-weight="700" fill="#F2F3F5">이전 계정</text><text x="56" y="222" font-size="12.5" fill="#A4A8B0">세션·예약 작업·backlog</text>
+<rect x="355" y="174" width="250" height="60" rx="14" fill="#0F2A27" stroke="#2DD4BF" stroke-width="1.5"/><text x="371" y="201" font-size="16" font-weight="700" fill="#2DD4BF">export → apply</text><text x="371" y="222" font-size="12.5" fill="#A4A8B0">쓰기 전 백업 · restore로 되돌림</text>
+<rect x="670" y="174" width="250" height="60" rx="14" fill="#17191D" stroke="#2A2D33" stroke-width="1.5"/><text x="686" y="201" font-size="16" font-weight="700" fill="#F2F3F5">새 계정</text><text x="686" y="222" font-size="12.5" fill="#A4A8B0">그룹·핀은 앱 도구로 다시 만듦</text>
+<path d="M290 204 L349 204" fill="none" stroke="#6B7078" stroke-width="2" stroke-linecap="round" marker-end="url(#g)"/>
+<path d="M605 204 L664 204" fill="none" stroke="#2DD4BF" stroke-width="2" stroke-linecap="round" marker-end="url(#a)"/>
+<text x="40" y="274" font-size="12" font-weight="600" fill="#A4A8B0">다른 기기 · 번들</text>
+<rect x="40" y="284" width="250" height="60" rx="14" fill="#17191D" stroke="#2A2D33" stroke-width="1.5"/><text x="56" y="311" font-size="16" font-weight="700" fill="#F2F3F5">이 기기</text><text x="56" y="332" font-size="12.5" fill="#A4A8B0">export --bundle</text>
+<rect x="355" y="284" width="250" height="60" rx="14" fill="#0F2A27" stroke="#2DD4BF" stroke-width="1.5"/><text x="371" y="311" font-size="16" font-weight="700" fill="#2DD4BF">sessions.tar.gz</text><text x="371" y="332" font-size="12.5" fill="#A4A8B0">권한 600 · 회사 데이터 기본 제외</text>
+<rect x="670" y="284" width="250" height="60" rx="14" fill="#17191D" stroke="#2A2D33" stroke-width="1.5"/><text x="686" y="311" font-size="16" font-weight="700" fill="#F2F3F5">대상 기기</text><text x="686" y="332" font-size="12.5" fill="#A4A8B0">apply --bundle --map-path</text>
+<path d="M290 314 L349 314" fill="none" stroke="#6B7078" stroke-width="2" stroke-linecap="round" marker-end="url(#g)"/>
+<path d="M605 314 L664 314" fill="none" stroke="#2DD4BF" stroke-width="2" stroke-linecap="round" marker-end="url(#a)"/>
+<text x="40" y="396" font-size="13" fill="#A4A8B0">원본은 바꾸지 않음 · 같은 세션을 두 계정·두 기기에서 동시에 이어가지 않기</text>
+</svg>

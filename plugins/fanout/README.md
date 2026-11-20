@@ -1,5 +1,12 @@
 # fanout
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/readme/hero-dark.svg">
+    <img src="docs/readme/hero-light.svg" width="960" alt="fanout 소개: 메인 세션이 고칠 것 목록을 겹치지 않게 나눠 하위 세션 여럿(필요하면 2단계 세션)에 맡기고, 세션마다 설계 검토부터 PR 병합까지 끝낸 뒤 통합 검증·정리하는 흐름">
+  </picture>
+</p>
+
 **대화에서 정리한 「고칠 것들」을 하위 세션에 나눠 맡기고, PR 병합과 정리까지 끝내는 Claude Code 플러그인**
 
 Claude 데스크톱 앱(Code 탭)에서 메인 세션 하나로 진단·검토를 하다 보면 고칠 것이 여럿 쌓입니다. `/fanout`을 부르면 이 목록을 서로 같은 파일을 건드리지 않게 묶어 하위 세션으로 띄웁니다. 각 하위 세션은 설계·계획 검토부터 PR 병합까지 혼자 끝냅니다. 모든 세션이 끝나면 메인 세션이 합쳐진 상태를 다시 검증하고, 하위 세션과 워크트리를 정리합니다.

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="420" viewBox="0 0 960 420" role="img" aria-labelledby="t d">
+<title id="t">fanout — 고칠 것들을 하위 세션에 나눠 PR 병합까지 맡기는 Claude Code 플러그인</title>
+<desc id="d">대화에서 정리한 고칠 것 목록을 겹치지 않게 묶어, 세션마다 별도 워크트리에서 설계 검토, 구현, 검토, 수정, PR 병합까지 끝내게 하고, 메인 세션이 통합 검증과 정리를 하는 흐름</desc>
+<style>text{font-family:'Pretendard Variable',Pretendard,'Apple SD Gothic Neo','Noto Sans KR',system-ui,sans-serif}</style>
+<defs><marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#2DD4BF"/></marker><marker id="g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#6B7078"/></marker></defs>
+<rect x="1" y="1" width="958" height="418" rx="28" fill="#0E0F11" stroke="#2A2D33"/>
+<rect x="40" y="36" width="52" height="52" rx="12" fill="#D9F99D"/>
+<path d="M62 48V62M62 62C62 70 50 68 50 78M62 62C62 70 74 68 74 78M62 62V78" fill="none" stroke="#18181B" stroke-width="3.5" stroke-linecap="round"/><circle cx="62" cy="48" r="3.5" fill="#18181B"/><circle cx="50" cy="78" r="3.5" fill="#18181B"/><circle cx="62" cy="78" r="3.5" fill="#18181B"/><circle cx="74" cy="78" r="3.5" fill="#18181B"/>
+<text x="108" y="66" font-size="30" font-weight="800" fill="#F2F3F5">fanout</text>
+<text x="108" y="88" font-size="13" fill="#A4A8B0">Claude Code 플러그인</text>
+<text x="40" y="132" font-size="17" font-weight="700" fill="#A4A8B0">고칠 것들을 하위 세션에 나눠 맡기고 PR 병합과 정리까지 끝낸다</text>
+<rect x="40" y="218" width="140" height="76" rx="14" fill="#17191D" stroke="#2A2D33" stroke-width="1.5"/><text x="56" y="253" font-size="16" font-weight="700" fill="#F2F3F5">메인 세션</text><text x="56" y="274" font-size="12.5" fill="#A4A8B0">고칠 것 목록</text>
+<rect x="210" y="218" width="160" height="76" rx="14" fill="#0F2A27" stroke="#2DD4BF" stroke-width="1.5"/><text x="226" y="253" font-size="16" font-weight="700" fill="#2DD4BF">나누기</text><text x="226" y="274" font-size="12.5" fill="#A4A8B0">겹치지 않게 묶음</text>
+<rect x="410" y="160" width="330" height="56" rx="14" fill="#17191D" stroke="#2A2D33" stroke-width="1.5"/><text x="426" y="185" font-size="16" font-weight="700" fill="#F2F3F5">하위 세션 1</text><text x="426" y="206" font-size="12.5" fill="#A4A8B0">설계 검토 → 구현 → 검토 → 수정 → PR 병합</text>
+<rect x="410" y="228" width="330" height="56" rx="14" fill="#17191D" stroke="#2A2D33" stroke-width="1.5"/><text x="426" y="253" font-size="16" font-weight="700" fill="#F2F3F5">하위 세션 2</text><text x="426" y="274" font-size="12.5" fill="#A4A8B0">설계 검토 → 구현 → 검토 → 수정 → PR 병합</text>
+<rect x="410" y="296" width="330" height="56" rx="14" fill="#17191D" stroke="#2A2D33" stroke-width="1.5"/><text x="426" y="321" font-size="16" font-weight="700" fill="#F2F3F5">2단계 세션</text><text x="426" y="342" font-size="12.5" fill="#A4A8B0">1단계 병합 뒤에 띄움</text>
+<rect x="775" y="218" width="145" height="76" rx="14" fill="#17191D" stroke="#2A2D33" stroke-width="1.5"/><text x="791" y="253" font-size="16" font-weight="700" fill="#F2F3F5">통합 검증·정리</text><text x="791" y="274" font-size="12.5" fill="#A4A8B0">세션·워크트리 정리</text>
+<text x="410" y="150" font-size="12" font-weight="600" fill="#A4A8B0">세션마다 별도 워크트리</text>
+<path d="M180 256 L204 256" fill="none" stroke="#6B7078" stroke-width="2" stroke-linecap="round" marker-end="url(#g)"/>
+<path d="M370 256 C390 256 388 188 404 188" fill="none" stroke="#2DD4BF" stroke-width="2" stroke-linecap="round" marker-end="url(#a)"/>
+<path d="M740 188 C756 188 756 256 769 256" fill="none" stroke="#6B7078" stroke-width="2" stroke-linecap="round"/>
+<path d="M370 256 C390 256 388 256 404 256" fill="none" stroke="#6B7078" stroke-width="2" stroke-linecap="round" marker-end="url(#g)"/>
+<path d="M740 256 C756 256 756 256 769 256" fill="none" stroke="#6B7078" stroke-width="2" stroke-linecap="round"/>
+<path d="M370 256 C390 256 388 324 404 324" fill="none" stroke="#6B7078" stroke-width="2" stroke-linecap="round" marker-end="url(#g)"/>
+<path d="M740 324 C756 324 756 256 769 256" fill="none" stroke="#6B7078" stroke-width="2" stroke-linecap="round" marker-end="url(#g)"/>
+<text x="40" y="396" font-size="13" fill="#A4A8B0">사용량이 80%를 넘으면 묻고 진행 · 병합 제한 저장소는 PR까지만 만듦</text>
+</svg>
