@@ -3,19 +3,25 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-PRICES_AS_OF = "2026-10-06"
+PRICES_AS_OF = "2026-11-23"
 PRICE_SOURCE = (
-    "claude-api 스킬 자료(shared/prompt-caching.md, shared/model-migration.md) 2026-10-06 기준, $/MTok: "
-    "캐시 읽기는 모델별 표기값(Haiku 5.5는 입력 단가의 0.1배), 캐시 쓰기는 5분 TTL 입력 단가의 1.25배·1시간 TTL 입력 단가의 2배"
+    "Claude는 platform.claude.com/docs/en/about-claude/pricing, OpenAI는 developers.openai.com/api/docs/pricing(표준 요금) "
+    "2026-11-23 확인, $/MTok: 캐시 읽기는 모델별 표기값, 캐시 쓰기는 5분 TTL 입력 단가의 1.25배·1시간 TTL 입력 단가의 2배, "
+    "OpenAI 입력 토큰은 캐시 읽기 토큰을 포함한다"
 )
 LONG_PROMPT_TOKENS = 100_000
 CACHE_WRITE_1H_MULTIPLIER = 2.0
 
 PRICES: dict[str, dict[str, float]] = {
+    "claude-fable-5-2": {"input": 8.0, "output": 40.0, "cache_read": 0.20, "cache_write": 10.0},
     "claude-fable-5-1": {"input": 10.0, "output": 50.0, "cache_read": 0.25, "cache_write": 12.5},
     "claude-opus-5-5": {"input": 4.0, "output": 20.0, "cache_read": 0.20, "cache_write": 5.0},
-    "claude-sonnet-5-5": {"input": 2.0, "output": 10.0, "cache_read": 0.20, "cache_write": 2.5},
+    "claude-sonnet-5-5": {"input": 2.0, "output": 10.0, "cache_read": 0.10, "cache_write": 2.5},
     "claude-haiku-5-5": {"input": 0.10, "output": 0.50, "cache_read": 0.01, "cache_write": 0.125},
+}
+OPENAI_PRICES: dict[str, dict[str, float]] = {
+    "gpt-6.1-sol": {"input": 2.0, "output": 10.0, "cache_read": 0.10},
+    "gpt-6.2-sol": {"input": 2.0, "output": 10.0, "cache_read": 0.10},
 }
 LONG_PROMPT_PRICES: dict[str, dict[str, float]] = {
     "claude-haiku-5-5": {"input": 0.50, "output": 2.50, "cache_read": 0.05, "cache_write": 0.625},
@@ -57,6 +63,15 @@ def cost(model: str, input: int, output: int, cache_read: int, cache_write: int,
             return None
         total += tokens * prices[key] / 1_000_000
     return total + cache_write_1h * prices["input"] * CACHE_WRITE_1H_MULTIPLIER / 1_000_000
+
+
+def openai_cost(model: str, input: int, output: int, cache_read: int) -> float | None:
+    """OpenAI의 input은 cache_read를 포함한 전체 입력 토큰 수다."""
+    prices = OPENAI_PRICES.get(model)
+    if prices is None:
+        return None
+    uncached = max(input - cache_read, 0)
+    return (uncached * prices["input"] + cache_read * prices["cache_read"] + output * prices["output"]) / 1_000_000
 
 
 def find_workflow_dir(ref: str, projects_root: Path = _DEFAULT_PROJECTS_ROOT) -> Path:

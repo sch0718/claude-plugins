@@ -374,7 +374,7 @@ tests = ["pytest {files}"]
 
 `CF profile on`과 `CF profile off`는 이 기기의 `repos.toml` 최상위에 `profiling = true` 또는 `false`를 씁니다. 기본값은 꺼짐입니다. `CASCADE_PROFILING=1` 또는 `0`을 주면 설정 파일보다 우선합니다. `CASCADE_REPOS_TOML`로 설정 파일을 지정한 동안에는 `on`과 `off`가 파일 쓰기를 거부합니다. `CF profile status`는 실행 폴더 없이 쓸 수 있고 적용값과 출처를 보여 줍니다.
 
-켜면 `CF report`를 만들 때 `~/.claude/cascade-fix/profile/<run_id>.json`에 사용량을 보관합니다. 저장소 이름, 역할별 요청·실제 모델, 호출 수, 대체 사유별 건수, 토큰·비용과 회차 소요 시간을 남깁니다. 지적 본문·코드·전체 경로는 보관 대상에서 제외하며, 정해진 분류에 없는 대체 사유는 「기타」로 셉니다. 같은 실행을 다시 보고하면 기록을 갱신합니다. 다른 저장소의 실행 ID가 겹치면 파일명에 저장소 경로의 해시 8자리를 붙입니다. 저장에 실패하면 경고를 남기고 보고서는 정상적으로 생성합니다. `CASCADE_PROFILE_DIR`로 기록 폴더를 바꿀 수 있습니다.
+켜면 `CF report`를 만들 때 `~/.claude/cascade-fix/profile/<run_id>.json`에 사용량을 보관합니다. 저장소 이름, 역할별 요청·실제 모델, 호출 수, 대체 사유별 건수, 토큰·비용과 회차 소요 시간을 남깁니다. 지적 본문·코드·전체 경로는 보관 대상에서 제외하며, 정해진 분류에 없는 대체 사유는 「기타」로 셉니다. 같은 실행을 다시 보고하면 기록을 갱신합니다. 다른 저장소의 실행 ID가 겹치면 파일명에 저장소 경로의 해시 8자리를 붙입니다. Codex 작업자의 비용은 기록할 때 CLI 토큰에 OpenAI 공개 표준 단가를 적용해 저장합니다. OpenAI의 입력 토큰은 캐시 읽기 토큰을 포함하므로 입력 단가는 그 차이에만 적용하고, 입력 272K 토큰 초과 요청의 할증은 반영하지 않습니다. 토큰이 기록되지 않는 의견·재검토 칸은 「단가 모름」으로 남습니다. 저장에 실패하면 경고를 남기고 보고서는 정상적으로 생성합니다. `CASCADE_PROFILE_DIR`로 기록 폴더를 바꿀 수 있습니다.
 
 - `CF profile report [--since YYYY-MM-DD] [--by role|model|runner|repo|week] [--json]`은 기본으로 역할과 실제 모델을 함께 묶습니다. 날짜 범위에 시작일을 포함하며, 주는 ISO 주차를 씁니다. 대체 시도는 실제 러너에 각각 집계하고 대체 건수는 한 번만 셉니다. 비용 합계와 호출당 비용에는 기록된 비용만 쓰고 「단가 모름」 건수를 따로 표시합니다. 캐시 쓰기 비용 비율은 5분 TTL 단가를 적용한 추정값입니다.
 - `CF profile import-sessions [--since YYYY-MM-DD]`는 `~/.claude/projects` 아래의 Workflow 저널에서 cascade-fix 역할과 일치하는 작업을 가져옵니다. 날짜는 저널 수정일을 기준으로 합니다. 저장된 실행에 속한 Workflow는 제외하고, 가져온 작업은 `(가져옴)` 저장소로 집계합니다. 다시 실행하면 `imported-claude.json`을 새로 씁니다. `CASCADE_PROJECTS_ROOT`로 저널을 찾을 폴더를 바꿀 수 있습니다.
