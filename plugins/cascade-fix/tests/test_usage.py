@@ -93,6 +93,16 @@ class UsageTest(unittest.TestCase):
         self.assertAlmostEqual(usage.cost("claude-opus-5-5", 0, 0, 1_000_000, 1_000_000), 0.20 + 5.0)
         self.assertAlmostEqual(usage.cost("claude-fable-5-1", 0, 0, 1_000_000, 0), 0.25)
 
+    def test_cost_fable_5_2_and_sonnet_cache_read(self):
+        self.assertAlmostEqual(usage.cost("claude-fable-5-2", 1_000_000, 1_000_000, 1_000_000, 1_000_000),
+                               8.0 + 40.0 + 0.20 + 10.0)
+        self.assertAlmostEqual(usage.cost("claude-sonnet-5-5", 0, 0, 1_000_000, 0), 0.10)
+
+    def test_openai_cost_subtracts_cached_input(self):
+        self.assertAlmostEqual(usage.openai_cost("gpt-6.2-sol", 1_000_000, 1_000_000, 900_000), 0.2 + 0.09 + 10.0)
+        self.assertAlmostEqual(usage.openai_cost("gpt-6.1-sol", 1_000_000, 0, 0), 2.0)
+        self.assertIsNone(usage.openai_cost("composer-2.5", 1, 1, 0))
+
     def test_haiku_tier_is_per_request(self):
         two = 2 * usage.cost("claude-haiku-5-5", 60_000, 0, 0, 0)
         one = usage.cost("claude-haiku-5-5", 120_000, 0, 0, 0)

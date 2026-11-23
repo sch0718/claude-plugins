@@ -85,6 +85,12 @@ def _tokens(data: dict, keys: tuple[str, ...] = TOKEN_KEYS) -> dict | None:
     return values if any(value is not None for value in values.values()) else None
 
 
+def _openai_cost(model, tokens: dict | None) -> float | None:
+    if not tokens or not model or tokens["input"] is None or tokens["output"] is None:
+        return None
+    return usage.openai_cost(model, tokens["input"], tokens["output"], tokens["cache_read"] or 0)
+
+
 def _actual(runner, model, tokens=None, cost=None) -> dict:
     return {"runner": _identifier(runner), "model": _identifier(model), "calls": 1,
             "tokens": tokens, "cost": report._stored_number(cost)}
@@ -196,7 +202,7 @@ def _round_actuals(ledger: Ledger, run_dir: Path, roles: dict, claude: report._C
         else:
             raw = outcome.get("usage") or {}
             tokens = None if raw.get(UNRECORDED) else _tokens(raw, CLI_KEYS)
-        actuals[cell].append(_actual(runner, model, tokens))
+        actuals[cell].append(_actual(runner, model, tokens, _openai_cost(model, tokens)))
     matched.update((job, RUNNER_CLAUDE) for (_, job), remaining in claude_cli.items() if remaining)
 
     work = set(assignment.work_keys(roles, ledger.mode))

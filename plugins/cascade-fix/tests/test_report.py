@@ -753,8 +753,9 @@ def usage_row(job_id, cell, input=4, output=80, cache_read=2000, cost=0.0123, mo
             "cache_read": cache_read, "cache_write": 0, "cost": cost}
 
 
-def usage_file(*rows, prices_as_of="2026-10-06", price_source=None):
-    data = {"prices_as_of": prices_as_of, "workflows": {"wf_1": list(rows)}, "unmatched": {"wf_1": []}}
+def usage_file(*rows, prices_as_of=None, price_source=None):
+    from cascade import usage as price_table
+    data = {"prices_as_of": prices_as_of or price_table.PRICES_AS_OF, "workflows": {"wf_1": list(rows)}, "unmatched": {"wf_1": []}}
     if price_source is not None:
         data["price_source"] = price_source
     return data

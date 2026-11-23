@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
 
-from cascade import cli, cli_steps, profiles
+from cascade import cli, cli_steps, profile, profiles
 from cascade.rounds import Ledger, RoundRecord
 
 SONNET = "claude-sonnet-5-5"
@@ -209,6 +209,13 @@ class ProfileTest(unittest.TestCase):
             with self.subTest(by=by):
                 self.assertEqual({row[by] for row in summary("--by", by)["groups"]}, keys)
         self.assertEqual(summary("--since", "2026-11-21")["groups"], [])
+
+    def test_cli_tokens_of_openai_models_are_priced(self):
+        tokens = {"input": 1_000_000, "output": 0, "cache_read": 500_000, "cache_write": None}
+        self.assertAlmostEqual(profile._openai_cost("gpt-6.2-sol", tokens), 1.0 + 0.05)
+        self.assertIsNone(profile._openai_cost("gpt-6.2-sol", None))
+        self.assertIsNone(profile._openai_cost(None, tokens))
+        self.assertIsNone(profile._openai_cost("composer-2.5", tokens))
 
     def test_workflow_fallback_without_tokens_uses_its_own_model(self):
         ledger = self.ledger()
