@@ -339,7 +339,7 @@ Claude·Cursor·`codex-doc` 결과는 형식이 같아 형식으로는 가릴 �
 ## 프로파일링
 
 - 기본값은 꺼짐이다. `CF profile on`과 `CF profile off`로 바꾸고 `CF profile status`로 적용값을 본다. 환경 변수 `CASCADE_PROFILING=1` 또는 `0`이 설정 파일보다 우선한다.
-- 켜면 `CF report`가 호출 수·토큰·비용 등 사용량을 로컬에 남긴다. 지적 본문·코드·전체 경로는 보관 대상에서 제외한다.
+- 켜면 `CF report`가 호출 수·토큰·비용 등 사용량을 로컬에 남긴다. 지적 본문·코드·전체 경로는 보관 대상에서 제외한다. Codex 작업자 비용은 토큰이 기록되면 OpenAI 표준 단가로 계산하고, 토큰이 없는 의견·재검토 칸은 「단가 모름」으로 남는다.
 - `CF profile report`로 보관한 기록을 모아 보고, `CF profile import-sessions`로 로컬 Claude Workflow 사용량을 가져온다. 옵션은 [레퍼런스](docs/reference.md#프로파일링)를 본다.
 
 ## 규칙
