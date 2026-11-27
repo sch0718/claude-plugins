@@ -62,6 +62,11 @@ test('지난 이야기는 첫 그림을 쓰는 별도 장면이다', () => {
   assert.equal(estimateStory(episode).lines, 4);
 });
 
+test('지난 이야기 객체에서 해설을 고르거나 기본 해설을 쓴다', () => {
+  assert.equal(lib.speechLines({ ...story, recap: { t: '요약', who: 'narr_f' } })[0].who, 'narr_f');
+  assert.equal(lib.speechLines({ ...story, recap: { t: '요약' } })[0].who, 'narr');
+});
+
 test('자막을 단어 단위로 나누고 긴 단어는 자른다', () => {
   assert.deepEqual(wrapLines('가나 다라 마바사아자차 카', 4), ['가나', '다라', '마바사아', '자차 카']);
 });
@@ -106,6 +111,17 @@ test('음성 해시는 0.1.0과 호환되고 실제 반영된 지시와 take만 
   assert.equal(tts.voiceHash(say, line, { direction: '천천히' }), tts.voiceHash(say, line, { direction: 'slow, softly' }));
   assert.notEqual(tts.voiceHash(say, line, { direction: '천천히' }), legacy(say));
   assert.notEqual(tts.voiceHash(vstudio, line, { direction: '높은 목소리' }), legacy(vstudio));
+});
+
+test('복제 목소리는 속도와 take만 해시에 반영한다', () => {
+  const voice = { provider: 'vstudio', model: 'omnivoice', id: 'demo', seed: 7, style: 'low pitch' };
+  const line = '문장';
+  const hash = tts.voiceHash(voice, line);
+  for (const direction of ['whisper', 'low pitch', 'high pitch']) {
+    assert.equal(tts.voiceHash(voice, line, { direction }), hash);
+  }
+  assert.notEqual(tts.voiceHash(voice, line, { direction: '천천히' }), hash);
+  assert.notEqual(tts.voiceHash(voice, line, { take: 1 }), hash);
 });
 
 test('낭독을 비교할 때 글자 모양과 숫자 읽기를 통일한다', () => {

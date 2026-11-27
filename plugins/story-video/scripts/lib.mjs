@@ -12,6 +12,7 @@ const GAP = 0.35;
 const lead = scene => scene.lead ?? 0.6;
 const tail = scene => scene.tail ?? 0.8;
 const chars = text => Array.from(text.replace(/\s/gu, '')).length;
+export const NARR = /^narr(_[\w-]+)?$/;
 
 export const estimateSeconds = text => chars(text) * 0.133;
 
@@ -35,7 +36,7 @@ export function storyScenes(story) {
   const recap = typeof story.recap === 'string' ? { t: story.recap } : story.recap;
   if (!recap?.t.trim()) return story.scenes;
   return [
-    { id: 'recap', art: story.scenes[0].id, lines: [{ ...recap, who: 'narr' }] },
+    { id: 'recap', art: story.scenes[0].id, lines: [{ ...recap, who: recap.who ?? 'narr' }] },
     ...story.scenes,
   ];
 }
@@ -55,6 +56,10 @@ export function validateStory(story) {
   storyFormat(story);
   if (story.recap != null && typeof story.recap !== 'string' && !validLine(story.recap)) {
     throw new Error('지난 이야기의 문장 형식이 잘못됐다.');
+  }
+  if (typeof story.recap === 'object' && story.recap?.who !== undefined
+      && (typeof story.recap.who !== 'string' || !NARR.test(story.recap.who))) {
+    throw new Error('지난 이야기의 who는 해설 키(narr 또는 narr_<이름>)여야 한다.');
   }
   const ids = new Set(['recap']);
   const validId = id => typeof id === 'string' && /^[\w-]+$/.test(id);
