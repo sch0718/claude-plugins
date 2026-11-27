@@ -44,7 +44,6 @@ function durationOk(result, who, text) {
 }
 
 async function makeVoice(lines, voices, dir, force) {
-  loadEnv(process.env.STORY_VIDEO_VOICE_ENV ?? '~/.config/story-video/voice.env');
   mkdirSync(dir, { recursive: true });
   const scratch = force ? mkdtempSync(path.join(dir, '.force-')) : dir;
   try {
@@ -59,7 +58,7 @@ async function makeVoice(lines, voices, dir, force) {
     const regenerated = new Set();
     const dropped = new Map();
     for (const line of lines) {
-      const voice = voices[line.who] ?? voices.narr;
+      const voice = voices[line.who];
       const file = voiceFile(voice, line.t, dir, line.who, line);
       const useScratch = force && !regenerated.has(file);
       const result = durationOk(await speak(voice, line.t, useScratch ? scratch : dir, line.who, line), line.who, line.t);
@@ -90,7 +89,7 @@ function cachedVoice(lines, voices, dir) {
   if (Object.keys(estimate(lines, voices, dir)).length) throw new Error('빠진 음성이 있다. voice 단계를 먼저 실행한다.');
   return lines.map(line => {
     const { who, t } = line;
-    const file = voiceFile(voices[who] ?? voices.narr, t, dir, who, line);
+    const file = voiceFile(voices[who], t, dir, who, line);
     return durationOk({ file, dur: dur(file) }, who, t);
   });
 }
@@ -347,18 +346,30 @@ async function main() {
   mkdirSync(out, { recursive: true });
 
   if (['voice', 'timeline', 'all'].includes(stage)) {
+    const { assertCast, castReport, isDraft, validateCast } = await import('./cast.mjs');
     const voiceDir = path.join(ep, 'voice');
     const setup = path.join(out, 'voices.json');
     const lines = speechLines(story);
     const remembered = stage === 'timeline' && fresh(setup, [storyFile]) ? readJson(setup) : undefined;
     const voices = selectVoices(story, lines, { provider: values.provider, voices: values.voices ? readJson(values.voices) : remembered });
-    const results = stage === 'timeline' ? cachedVoice(lines, voices, voiceDir)
-      : await makeVoice(lines, voices, voiceDir, values.force);
+    const baseVoices = story.voices;
+    let profiles;
+    let results;
+    if (stage === 'timeline') {
+      const { errors } = validateCast(voices, lines, { draft: true, baseVoices });
+      if (errors.length) throw new Error(`목소리 배정 오류\n- ${errors.join('\n- ')}`);
+      results = cachedVoice(lines, voices, voiceDir);
+    } else {
+      loadEnv(process.env.STORY_VIDEO_VOICE_ENV ?? '~/.config/story-video/voice.env');
+      profiles = await assertCast(voices, lines, { draft: isDraft(voices, values.provider), baseVoices });
+      results = await makeVoice(lines, voices, voiceDir, values.force);
+    }
     const json = JSON.stringify(voices, null, 2) + '\n';
     if ((stage !== 'timeline' && values.force) || !fresh(setup, [storyFile]) || readFileSync(setup, 'utf8') !== json) {
       save(setup, json);
     }
     await makeTimeline(story, ep, out, [storyFile, setup], results, values.force);
+    if (stage !== 'timeline') save(path.join(out, 'voice-cast.md'), castReport(voices, lines, profiles, baseVoices));
   }
   if (['visual', 'finish', 'all'].includes(stage)) {
     await videoStages(ep, out, storyFile, format, stage, { jobs, force: values.force, noPhone: values['no-phone'] });

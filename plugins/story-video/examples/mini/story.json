@@ -25,19 +25,22 @@
   ],
   "voices": {
     "narr": {
-      "provider": "say",
-      "id": "Yuna",
-      "rate": 170
+      "provider": "vstudio",
+      "model": "omnivoice",
+      "id": "36b0f26b",
+      "seed": 7
     },
     "jun": {
-      "provider": "say",
-      "id": "Yuna",
-      "rate": 185
+      "provider": "vstudio",
+      "model": "omnivoice",
+      "id": "508aba44",
+      "seed": 21
     },
     "driver": {
-      "provider": "say",
-      "id": "Yuna",
-      "rate": 150
+      "provider": "vstudio",
+      "model": "omnivoice",
+      "id": "f79deb61",
+      "seed": 41
     }
   },
   "scenes": [

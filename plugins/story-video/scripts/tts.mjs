@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 // 문장 → 음성 wav. 공급자 5개(say·edge·gemini·eleven·vstudio)를 한 함수로 부른다. Node 22 이상, 외부 라이브러리 없음(ffmpeg·ffprobe 필요, edge는 uvx).
 //
-// 명령으로:
+// 명령으로(story-video 낭독 규칙을 검사한다: 최종본은 VoiceStudio 복제, 임시판은 say만. 다른 공급자는 모듈 speak()로만 쓴다):
 //   node tts.mjs <lines.json> <voices.json> <출력 폴더> [--dry-run] [--force] [--env <키 파일>]
 //     lines.json   [{ "who": "narr", "t": "문장", "direction": "천천히", "take": 1 }, ...]
-//     voices.json  { "narr": { "provider": "eleven", "id": "<음성 ID>" }, ... }  (who가 없으면 narr를 쓴다)
+//     voices.json  { "narr": { "provider": "vstudio", "model": "omnivoice", "id": "<복제 프로필 ID>", "seed": 7 }, ... }
 //     결과         <출력 폴더>/<who>-<해시>.wav (48kHz 모노, 앞뒤 무음 자름) + durations.json
-//     --dry-run    부르지 않고, 새로 받을 글자 수·요청 수와 무료 한도만 본다
+//     --dry-run    새로 받을 글자 수·요청 수와 무료 한도만 본다(배역 검사·프로필 조회 생략)
 //     --force      무료 한도를 넘어도 부른다
 // 모듈로(프로젝트의 시간표 스크립트에서):
 //   import { speak, loadEnv } from '<이 파일>';  loadEnv('~/.config/<프로젝트>/voice.env');
@@ -34,6 +34,10 @@ export function loadEnv(file) {
   }
 }
 
+export function vstudioBase() {
+  return (process.env.VOICESTUDIO_URL || 'http://127.0.0.1:3900').replace(/\/+$/, '');
+}
+
 const sh = (cmd, args) => execFileSync(cmd, args, { stdio: ['ignore', 'pipe', 'pipe'] });
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 export const dur = f => +sh('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', f]).toString().trim();
@@ -43,13 +47,17 @@ export const clean = t => t.replace(/…/g, ', ').replace(/\s+/g, ' ').trim();
 function voiceDirection(voice, { direction, direction_en, take = 0 } = {}) {
   const instruction = direction_en || direction || '';
   const { whisper, pitch, speed, volume } = directionParams(`${direction ?? ''} ${direction_en ?? ''}`);
-  const freeform = voice.provider === 'gemini' || (voice.provider === 'vstudio' && voice.instruct === 'freeform');
+  const clone = voice.provider === 'vstudio' && voice.id;
+  const freeform = voice.provider === 'gemini' || (voice.provider === 'vstudio' && !clone && voice.instruct === 'freeform');
   const dropped = instruction.trim() && !freeform ? ['감정·말투'] : [];
   const changes = {};
   if (instruction.trim() && freeform) changes.style = [voice.style, instruction].filter(Boolean).join(', ');
 
   if (voice.provider === 'vstudio') {
-    if (!freeform && (whisper || pitch)) {
+    if (clone) {
+      if (whisper) dropped.push('whisper');
+      if (pitch) dropped.push(pitch + ' pitch');
+    } else if (!freeform && (whisper || pitch)) {
       let tags = (voice.style ?? '').split(',').map(tag => tag.trim()).filter(Boolean);
       const original = tags.join(', ');
       if (pitch) {
@@ -174,7 +182,7 @@ const P = {
   },
   // VoiceStudio 앱(로컬, OpenAI 호환 API). 앱이 켜져 있어야 한다. 첫 요청은 모델을 올리느라 몇 분 걸린다
   async vstudio(v, text, out) {
-    const base = (v.url || process.env.VOICESTUDIO_URL || 'http://127.0.0.1:3900').replace(/\/$/, '');
+    const base = vstudioBase();
     const body = { model: v.model || 'tts-1', voice: v.id || 'alloy', input: text, language: v.lang || 'ko',
       seed: v.seed ?? 42, response_format: 'wav', ...(v.style ? { instruct: v.style } : {}), ...(v.speed ? { speed: v.speed } : {}) };
     const res = await retry(() => http(`${base}/v1/audio/speech`, { method: 'POST', headers: { 'content-type': 'application/json' },
@@ -221,8 +229,8 @@ export function estimate(lines, voices, dir) {
   const need = {};
   const pending = new Set();
   for (const l of lines) {
-    const v = voices[l.who] || voices.narr;
-    if (!v) throw new Error(`배정표에 ${l.who}도 narr도 없음`);
+    const v = Object.hasOwn(voices, l.who) && voices[l.who];
+    if (!v) throw new Error(`배정표에 ${l.who}의 목소리가 없다.`);
     const text = l.say ?? l.t;
     const file = voiceFile(v, text, dir, l.who, l);
     if (pending.has(file) || fs.existsSync(file)) continue;
@@ -240,7 +248,7 @@ export function overFree(need) {
 }
 
 // ── 명령으로 실행 ──
-if (process.argv[1] && fs.realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
+async function main() {
   const args = process.argv.slice(2);
   const flag = f => args.includes(f);
   const envAt = args.indexOf('--env');
@@ -249,6 +257,10 @@ if (process.argv[1] && fs.realpathSync(process.argv[1]) === fileURLToPath(import
   if (!dir) { console.error('쓰는 법: node tts.mjs <lines.json> <voices.json> <출력 폴더> [--dry-run] [--force] [--env <키 파일>]'); process.exit(2); }
   const lines = JSON.parse(fs.readFileSync(linesF, 'utf8'));
   const voices = JSON.parse(fs.readFileSync(voicesF, 'utf8'));
+  if (!flag('--dry-run')) {
+    const { assertCast, isDraft } = await import('./cast.mjs');
+    await assertCast(voices, lines, { draft: isDraft(voices) });
+  }
   const need = estimate(lines, voices, dir);
   console.log(`문장 ${lines.length}개. 새로 받을 것:`, Object.keys(need).length ? Object.entries(need).map(([p, n]) => `${p} ${n.requests}번 ${n.chars}자`).join(', ') : '없음(전부 캐시)');
   const over = overFree(need);
@@ -257,9 +269,16 @@ if (process.argv[1] && fs.realpathSync(process.argv[1]) === fileURLToPath(import
   if (over.length && !flag('--force')) { console.log('무료 한도를 넘어서 멈춥니다. 그래도 부르려면 --force'); process.exit(1); }
   const out = [];
   for (const l of lines) {
-    try { out.push({ ...l, ...(await speak(voices[l.who] || voices.narr, l.say ?? l.t, dir, l.who, l)) }); }
+    try { out.push({ ...l, ...(await speak(voices[l.who], l.say ?? l.t, dir, l.who, l)) }); }
     catch (e) { console.error(`멈춤(${l.who}: ${l.t.slice(0, 20)}…): ${e.daily ? '하루 한도. ' : ''}${e.message.slice(0, 200)}`); process.exitCode = 1; break; }
   }
   fs.writeFileSync(path.join(dir, 'durations.json'), JSON.stringify(out, null, 1));
   console.log(`${out.length}/${lines.length}문장, 합 ${out.reduce((s, x) => s + x.dur, 0).toFixed(1)}초 → ${path.join(dir, 'durations.json')}`);
+}
+
+if (process.argv[1] && fs.realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch(error => {
+    console.error(error.message);
+    process.exitCode = 1;
+  });
 }

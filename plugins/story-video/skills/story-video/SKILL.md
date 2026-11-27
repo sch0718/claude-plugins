@@ -7,7 +7,7 @@ description: 이야기(창작, 인터넷 커뮤니티의 유명한 이야기, �
 
 이 플러그인 폴더(`<플러그인>`)는 `${CLAUDE_PLUGIN_ROOT}`다. 값이 비어 있으면 이 스킬의 기본 폴더(Base directory)에서 두 단계 위(`../..`)가 플러그인 폴더다. 스크립트는 `<플러그인>/scripts/`에 있다.
 
-필요한 것: Node.js 22 이상, ffmpeg·ffprobe, `uv`(자막 그림용 Pillow, 음성 인식용 faster-whisper), 그림을 그리려면 Codex CLI(`codex`, 이미지 생성이 되는 계정). 음성은 VoiceStudio 앱(로컬), macOS `say`(시범), Edge TTS 등.
+필요한 것: Node.js 22 이상, ffmpeg·ffprobe, `uv`(자막 그림용 Pillow, 음성 인식용 faster-whisper), 그림을 그리려면 Codex CLI(`codex`, 이미지 생성이 되는 계정). 음성은 최종본에 VoiceStudio 앱(로컬), 임시판에 macOS `say`를 쓴다.
 
 ## 순서
 
@@ -19,16 +19,22 @@ description: 이야기(창작, 인터넷 커뮤니티의 유명한 이야기, �
 | 2 | `story-select` | 항목별 점수로 고르기 | `selection.md`, `<slug>/sources.md` | 이 세션, 고르기는 사용자 |
 | 3 | `story-outline` | 기승전결·장면·편 나누기·핵심 사실 | `ep01/story.json`(뼈대, `facts`) | Opus 5.5 (이 세션) |
 | 4 | `story-script` | 해설·대사·연기 지시 | `story.json`의 `lines` → `check.mjs ep01` | Opus 5.5 (이 세션) |
-| 5 | `story-voice` | 낭독 | `build.mjs ep01 voice` → `voice/`, `out/timeline.json` | VoiceStudio(또는 say·edge) |
-| 6 | `story-voice-check` | 음성 인식으로 대조, 오독 다시 만들기 | `voicecheck.mjs ep01` → `out/voice-check.md` | 로컬 faster-whisper |
+| 5 | `story-voice` | 배역 검사·낭독 | `cast.mjs ep01` → `build.mjs ep01 voice` → `voice/`, `out/timeline.json`, `out/voice-cast.md` | VoiceStudio(임시판은 say) |
+| 6 | `story-voice-check` | 음성 인식으로 대조, 오독 다시 만들기, 목소리 일관성 검사 | `voicecheck.mjs ep01` → `out/voice-check.md` | 로컬 faster-whisper |
 | 7 | `story-visual` | 그림 방식 정하기, 장면 그림, 움직임 영상 | `art.mjs ep01` → `contact.jpg` 확인, `build.mjs ep01 visual` | Codex `gpt-6.2-sol` 이미지 생성, ffmpeg |
 | 8 | `story-finish` | 자막 입히기, 기계 확인, 원본과 비교 검토 | `build.mjs ep01 finish`, `check.mjs ep01 --frames …`, `review.md` | ffmpeg, 이 세션 |
 | 9 | 올리기 | narrated-video 스킬의 「업로드」 절 | | |
 
-- 4와 5 사이에 사용자에게 대본(장면별 문장·연기 지시)을 보여 주고 고칠 곳을 받는다. 음성·그림은 대본이 굳은 뒤에 만든다(다시 만들면 시간이 든다).
+- 4와 5 사이에 사용자에게 대본(장면별 문장·연기 지시)을 보여 주고 고칠 곳을 받는다. 대본이 굳으면 `cast.mjs ep01`로 후보와 배정을 확인한 뒤 음성을 만든다.
 - 7의 그림 그리기는 대본이 굳으면 5·6과 따로 돌려도 된다(Codex와 VoiceStudio는 서로 다른 자원을 쓴다). 움직임 영상(`visual`)은 시간표가 있어야 한다.
 - 시범으로 빨리 볼 때: `build.mjs ep01 all --provider say`(say 음성, 그림이 없으면 단색 자리 그림).
 - 쇼츠도 만들 때: 같은 `story.json`으로 `art.mjs ep01 --format shorts`, `build.mjs ep01 visual --format shorts`, `finish --format shorts`. 음성·시간표는 같이 쓴다. 쇼츠는 3분 이하여야 하므로 구성 단계에서 편을 그 길이로 나눈다.
+
+## 목소리 규칙 요약
+
+- 해설은 `narr` 또는 `narr_<이름>`으로 1~2개를 쓴다. 모든 `who`를 배정하고 나이별 배역은 `base`를 적는다.
+- 최종본은 한 VoiceStudio 엔진에서 배역별 복제 프로필과 정수 `seed`를 정해 쓴다. `say`는 임시판에 쓴다.
+- 문장별 지시는 속도만 반영한다. 낭독 검증에서는 배정, 파일명, 같은 배역의 음높이를 확인한다.
 
 ## 작업 폴더 규약
 
@@ -41,7 +47,7 @@ description: 이야기(창작, 인터넷 커뮤니티의 유명한 이야기, �
         ├── story.json      뼈대·facts(3) → lines·direction(4) → style(7)
         ├── voice/          문장 음성 캐시                              (5·6)
         ├── art/<format>/   장면 그림, contact.jpg, prompts/, logs/     (7)
-        ├── out/            timeline.json, audio.wav, subtitles.srt, voices.json, voice-check.json·.md (5·6)
+        ├── out/            timeline.json, audio.wav, subtitles.srt, voices.json, voice-cast.md, voice-check.json·.md (5·6)
         │   └── <format>/   scenes/, video.mp4 (7)  subs/, final.mp4, final-phone.mp4, frames/ (8)
         └── review.md                                                 (8)
 ```
@@ -53,7 +59,7 @@ description: 이야기(창작, 인터넷 커뮤니티의 유명한 이야기, �
 0.1.0은 `art/<id>.png`, `out/final.mp4`를 썼다. 그림은 그대로 wide 그림으로 쓰인다. 지시가 없는 문장은 음성 캐시 해시가 같아서 다시 만들지 않는다.
 
 1. `story.json`에 `"format": "wide"`와 `facts`를 더하고(`story-outline` 3), 문장마다 `direction`·`direction_en`을 쓴다(`story-script`).
-2. `build.mjs ep01 voice`: 지시에서 속도·속삭임·높낮이가 뽑힌 문장만 다시 만들어진다.
+2. 배정표를 복제 프로필 형식으로 맞춘 뒤 `build.mjs ep01 voice`를 실행한다. 새 배정이나 속도로 해시가 달라진 문장은 다시 만들어진다.
 3. `voicecheck.mjs ep01` → `build.mjs ep01 visual` → `finish` → `check.mjs` → `review.md`.
 4. 예전 `out/final.mp4`·`out/scenes/`·`out/subs/`는 새 결과(`out/wide/`)를 확인한 뒤 지워도 된다.
 
@@ -70,7 +76,7 @@ description: 이야기(창작, 인터넷 커뮤니티의 유명한 이야기, �
 - 엔진 메모리가 생성할수록 쌓인다(시간당 2~5GB). 30분쯤마다 `top -l 1 -pid <pid> -stats mem`으로 보고, 10GB를 넘으면 엔진 프로세스만 `kill`한다. 감독 프로세스가 몇 초 안에 다시 띄운다. 15초 뒤 API 200을 확인하고, 안 뜨면 사용자에게 앱을 껐다 켜 달라고 한다.
 - `build.mjs voice`는 만든 문장을 캐시해 두고 이어 만든다. 끊기면 같은 명령을 다시 돌린다. 몇십 분 넘게 걸리면 `caffeinate -i`로 감싸고 로그를 파일로 남긴다.
 - 어림: 문장당 7~11초, 첫 요청은 모델을 올리느라 약 5분, 메모리가 차면 40초 이상. 6분 영상(108문장)에 약 40분.
-- **기본 엔진(OmniVoice) 가중치는 CC-BY-NC(비상업)다.** 개인·비공개 영상에만 쓴다. 공개하거나 수익을 내는 영상이면 앱 Model Catalogue에서 상업 사용이 되는 엔진을 고르거나 다른 공급자를 쓴다. 목소리 복제는 주인 허락이 있는 목소리만.
+- **기본 엔진(OmniVoice) 가중치는 CC-BY-NC(비상업)다.** 개인·비공개 영상에 쓴다. 상업적으로 쓸 영상이면 VoiceStudio Model Catalogue에서 상업 사용이 가능한 엔진을 고른다. 목소리 복제는 주인 허락이 있는 목소리만 쓴다.
 
 ## 보고에 넣을 것
 
