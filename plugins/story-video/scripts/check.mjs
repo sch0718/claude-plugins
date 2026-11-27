@@ -2,8 +2,8 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
-import { estimateStory, speechLines, storyScenes, validateStory, wrapLines } from './lib.mjs';
-import { clean, estimate } from './tts.mjs';
+import { artPath, estimateStory, FORMATS, speechLines, storyFormat, storyScenes, validateStory, wrapLines } from './lib.mjs';
+import { estimate } from './tts.mjs';
 
 const run = (command, args) => execFileSync(command, args, { stdio: ['ignore', 'pipe', 'pipe'], encoding: 'utf8' });
 const readJson = file => JSON.parse(readFileSync(file, 'utf8'));
@@ -26,12 +26,12 @@ function probe(file) {
   };
 }
 
-function extract(final, out, at, timeline) {
+function extract(final, out, at, timeline, width) {
   const file = path.join(out, `t${at}.png`);
   const tmp = path.join(out, `t${at}.${process.pid}.tmp.png`);
   try {
     run('ffmpeg', ['-nostdin', '-v', 'error', '-y', '-ss', String(at), '-i', final,
-      '-vf', 'scale=960:-1', '-frames:v', '1', '-update', '1', tmp]);
+      '-vf', `scale=${width}:-1`, '-frames:v', '1', '-update', '1', tmp]);
     if (!existsSync(tmp)) throw new Error('해당 시각에 영상 프레임이 없다.');
     renameSync(tmp, file);
   } finally {
@@ -45,19 +45,17 @@ function extract(final, out, at, timeline) {
 function main() {
   const { positionals: [dir, ...extra], values } = parseArgs({
     options: {
-      frames: { type: 'string' }, min: { type: 'string', default: '300' }, max: { type: 'string', default: '600' },
+      frames: { type: 'string' }, min: { type: 'string' }, max: { type: 'string' }, format: { type: 'string' },
     },
     allowPositionals: true,
   });
-  const min = Number(values.min);
-  const max = Number(values.max);
   const frames = values.frames?.split(',').map(at => at.trim()) ?? [];
-  if (!dir || extra.length || !Number.isFinite(min) || !Number.isFinite(max) || min < 0 || max < min
-      || frames.some(at => !at || !Number.isFinite(Number(at)) || Number(at) < 0)) {
-    console.error('쓰는 법 · node check.mjs <에피소드> [--frames 3,12.5,25] [--min 300] [--max 600]');
+  const usage = '쓰는 법 · node check.mjs <에피소드> [--format wide|shorts] [--frames 3,12.5,25] [--min <초>] [--max <초>]';
+  const usageError = () => {
+    console.error(usage);
     process.exitCode = 2;
-    return;
-  }
+  };
+  if (!dir || extra.length || frames.some(at => !at || !Number.isFinite(Number(at)) || Number(at) < 0)) return usageError();
   const ep = path.resolve(dir);
   const out = path.join(ep, 'out');
   let problems = 0;
@@ -66,16 +64,21 @@ function main() {
     console.log(`경고 · ${message}`);
   };
 
-  let story;
   const storyFile = path.join(ep, 'story.json');
+  let story, format;
   try {
     story = validateStory(readJson(storyFile));
+    format = storyFormat(story, values.format);
   } catch (error) {
-    warn(`story.json 읽기 실패(${error.code ?? error.message}).`);
+    warn(`대본이나 화면 형식을 읽을 수 없다(${error.code ?? error.message}).`);
     console.log(`문제 ${problems}개.`);
     process.exitCode = 1;
     return;
   }
+  const { w, h, subs, phone } = FORMATS[format];
+  const min = Number(values.min ?? (format === 'shorts' ? 0 : 300));
+  const max = Number(values.max ?? (format === 'shorts' ? 180 : 600));
+  if (!Number.isFinite(min) || !Number.isFinite(max) || min < 0 || max < min) return usageError();
 
   const counts = estimateStory(story);
   const beats = ['기', '승', '전', '결'];
@@ -86,10 +89,10 @@ function main() {
   if (counts.seconds < min || counts.seconds > max) warn(`어림 길이가 ${minSec(min)}~${minSec(max)} 범위를 벗어났다.`);
 
   for (const scene of storyScenes(story)) {
-    if (scene.id !== 'recap' && !existsSync(path.join(ep, 'art', `${scene.id}.png`))) warn(`${scene.id} 그림이 없다.`);
+    if (scene.id !== 'recap' && !existsSync(artPath(ep, format, scene.id))) warn(`${scene.id} 그림이 없다.`);
     scene.lines.forEach(({ t }, index) => {
       const label = `${scene.id} ${index + 1}번 문장`;
-      if (wrapLines(t).length > 2) warn(`${label}의 자막이 두 줄을 넘을 수 있다.`);
+      if (wrapLines(t, subs.maxChars).length > subs.preferredLines) warn(`${label}의 자막이 ${subs.preferredLines}줄을 넘을 수 있다.`);
       if ((t.match(/[.?!]/g)?.length ?? 0) >= 2) warn(`${label}의 자막을 문장 단위로 나눈다.`);
     });
   }
@@ -98,7 +101,7 @@ function main() {
     const setup = path.join(out, 'voices.json');
     const remembered = statSync(setup, { throwIfNoEntry: false })?.mtimeMs >= statSync(storyFile).mtimeMs;
     const voices = Object.assign(Object.create(null), remembered ? readJson(setup) : story.voices);
-    const lines = speechLines(story).map(line => ({ ...line, t: clean(line.t) }));
+    const lines = speechLines(story);
     const needs = Object.entries(estimate(lines, voices, path.join(ep, 'voice')));
     if (needs.length) warn(`빠진 음성 · ${needs.map(([provider, n]) => `${provider} ${n.requests}문장`).join(', ')}.`);
     else console.log('문장 음성이 모두 있다.');
@@ -120,13 +123,17 @@ function main() {
     warn('시간표가 없다.');
   }
 
-  const final = path.join(out, 'final.mp4');
+  const final = path.join(out, format, 'final.mp4');
   let video;
   if (existsSync(final)) {
     try {
       video = probe(final);
       console.log(`최종 영상 ${video.duration.toFixed(3)}초 · ${video.width}×${video.height} · ${Number(video.fps.toFixed(3))}fps · 음성 ${video.audio ? '있음' : '없음'}.`);
       if (!video.audio) warn('최종 영상에 음성 트랙이 없다.');
+      if (video.width !== w || video.height !== h) {
+        warn(`${format} 영상 해상도는 ${w}×${h}여야 한다.`);
+        process.exitCode = 1;
+      }
       if (timeline) {
         const difference = Math.abs(video.duration - timeline.total);
         console.log(`영상과 시간표 길이 차이 ${difference.toFixed(3)}초.`);
@@ -141,9 +148,14 @@ function main() {
   } else if (frames.length) {
     warn('프레임을 뽑을 최종 영상이 없다.');
   }
+  const total = timeline || video ? Math.max(timeline?.total ?? 0, video?.duration ?? 0) : counts.seconds;
+  if (format === 'shorts' && total > 180) {
+    warn(`쇼츠 길이 ${total.toFixed(3)}초가 180초를 넘었다.`);
+    process.exitCode = 1;
+  }
 
   if (video && frames.length) {
-    const frameDir = path.join(out, 'frames');
+    const frameDir = path.join(out, format, 'frames');
     mkdirSync(frameDir, { recursive: true });
     for (const value of frames) {
       const at = Number(value);
@@ -152,7 +164,7 @@ function main() {
         continue;
       }
       try {
-        extract(final, frameDir, at, timeline);
+        extract(final, frameDir, at, timeline, phone[0]);
       } catch {
         warn(`${at}초의 프레임을 뽑을 수 없다.`);
       }

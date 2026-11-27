@@ -6,8 +6,6 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
 FONT = "/System/Library/Fonts/AppleSDGothicNeo.ttc"
-WIDTH, HEIGHT = 1920, 260
-TEXT_WIDTH = 1600
 
 
 def font_at(size):
@@ -19,19 +17,19 @@ def font_at(size):
     raise OSError("자막 글꼴을 열 수 없다.")
 
 
-def wrap(text, font):
+def wrap(text, fits):
     lines = []
     line = ""
     for word in text.split():
         part = f"{line} {word}" if line else word
-        if font.getlength(part) <= TEXT_WIDTH:
+        if fits(part):
             line = part
             continue
         if line:
             lines.append(line)
         line = ""
         for char in word:
-            if line and font.getlength(line + char) > TEXT_WIDTH:
+            if line and not fits(line + char):
                 lines.append(line)
                 line = ""
             line += char
@@ -40,34 +38,45 @@ def wrap(text, font):
     return lines
 
 
-def draw_caption(job):
-    for size in (52, 50, 48, 46, 44):
+def draw_caption(job, layout):
+    width, height = layout["w"], layout["h"]
+    max_lines = layout["maxLines"]
+    max_chars = layout["maxChars"] if width < height else float("inf")
+    for size in range(layout["size"], layout["minSize"] - 1, -2):
         font = font_at(size)
-        lines = wrap(job["text"], font)
-        if len(lines) <= 2:
+
+        def fits(line):
+            return len(line) <= max_chars and font.getlength(line) <= layout["maxWidth"]
+
+        lines = wrap(job["text"], fits)
+        if len(lines) <= layout["preferredLines"]:
             break
-    if len(lines) > 2:
-        print(f"자막이 두 줄을 넘음: {job['text'][:20]}", file=sys.stderr)
-    if len(lines) > 3:
-        lines = lines[:3]
-        while font.getlength(lines[-1] + "…") > TEXT_WIDTH:
+    if len(lines) > layout["preferredLines"]:
+        print(f"자막이 {layout['preferredLines']}줄을 넘는다. {job['text'][:20]}", file=sys.stderr)
+    if len(lines) > max_lines:
+        lines = lines[:max_lines]
+        while not fits(lines[-1] + "…"):
             lines[-1] = lines[-1][:-1]
         lines[-1] += "…"
 
-    image = Image.new("RGBA", (WIDTH, HEIGHT))
+    # 글자 띠만 저장한다. 빌드에서 화면의 bottom 좌표에 아래 끝을 맞춘다.
+    if not 0 <= layout["bottom"] < height:
+        raise ValueError("자막 위치가 화면 밖이다.")
+    band = max_lines * (layout["size"] + 12) + 9
+    image = Image.new("RGBA", (width, band))
     if lines:
         draw = ImageDraw.Draw(image)
         line_height = size + 12
-        bottom = HEIGHT - 60
+        bottom = band - 1
         top = bottom - len(lines) * line_height
         half_width = max(font.getlength(line) for line in lines) / 2 + 28
         draw.rounded_rectangle(
-            (WIDTH / 2 - half_width, top - 4, WIDTH / 2 + half_width, bottom),
+            (width / 2 - half_width, top - 4, width / 2 + half_width, bottom),
             radius=22, fill=(0, 0, 0, 115),
         )
         for index, line in enumerate(lines):
             draw.text(
-                (WIDTH / 2, top + 7 + index * line_height), line,
+                (width / 2, top + 7 + index * line_height), line,
                 font=font, anchor="mt", fill=job["color"], stroke_width=3, stroke_fill="black",
             )
 
@@ -81,5 +90,6 @@ def draw_caption(job):
 
 
 if __name__ == "__main__":
+    layout = json.loads(sys.argv[2])
     for job in json.loads(Path(sys.argv[1]).read_text(encoding="utf-8")):
-        draw_caption(job)
+        draw_caption(job, layout)
