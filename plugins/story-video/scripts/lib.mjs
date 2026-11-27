@@ -8,13 +8,14 @@ export const FORMATS = {
   shorts: { w: 1080, h: 1920, art: [1024, 1536], phone: [540, 960],
     subs: { size: 64, minSize: 64, maxChars: 14, maxWidth: 900, preferredLines: 3, maxLines: 3, bottom: 1440 } },
 };
-const GAP = 0.35;
-const lead = scene => scene.lead ?? 0.6;
-const tail = scene => scene.tail ?? 0.8;
+export const PACES = {
+  normal: { gap: 0.35, lead: 0.6, tail: 0.8, speed: 1, secPerChar: 0.133 },
+  fast: { gap: 0.12, lead: 0.2, tail: 0.3, speed: 1.25, secPerChar: 0.112 },
+};
 const chars = text => Array.from(text.replace(/\s/gu, '')).length;
 export const NARR = /^narr(_[\w-]+)?$/;
 
-export const estimateSeconds = text => chars(text) * 0.133;
+export const estimateSeconds = (text, pace = 'normal') => chars(text) * PACES[pace].secPerChar;
 
 export function storyFormat(story, override) {
   const format = override ?? (story.format === undefined ? 'wide' : story.format);
@@ -22,6 +23,14 @@ export function storyFormat(story, override) {
     throw new Error('format은 wide 또는 shorts여야 한다.');
   }
   return format;
+}
+
+export function storyPace(story) {
+  const pace = story.pace === undefined ? (story.format === 'shorts' ? 'fast' : 'normal') : story.pace;
+  if (typeof pace !== 'string' || !Object.hasOwn(PACES, pace)) {
+    throw new Error('pace는 normal 또는 fast여야 한다.');
+  }
+  return pace;
 }
 
 export function artPath(ep, format, id) {
@@ -54,6 +63,7 @@ const validLine = line => typeof line?.t === 'string'
 export function validateStory(story) {
   if (!Array.isArray(story?.scenes) || !story.scenes.length) throw new Error('장면을 한 개 이상 넣어야 한다.');
   storyFormat(story);
+  const { lead, tail } = PACES[storyPace(story)];
   if (story.recap != null && typeof story.recap !== 'string' && !validLine(story.recap)) {
     throw new Error('지난 이야기의 문장 형식이 잘못됐다.');
   }
@@ -66,7 +76,7 @@ export function validateStory(story) {
   for (const scene of story.scenes) {
     if (!validId(scene?.id) || ids.has(scene.id.toLowerCase())) throw new Error('장면 id가 잘못됐거나 겹친다.');
     ids.add(scene.id.toLowerCase());
-    if ([lead(scene), tail(scene)].some(value => !Number.isFinite(value) || value < 0)) {
+    if ([scene.lead ?? lead, scene.tail ?? tail].some(value => !Number.isFinite(value) || value < 0)) {
       throw new Error(`${scene.id}의 쉼 길이는 0 이상의 숫자여야 한다.`);
     }
     if (!Array.isArray(scene.lines) || scene.lines.some(line => !validId(line?.who) || !validLine(line))) {
@@ -82,7 +92,15 @@ export function selectVoices(story, lines, { provider, voices } = {}) {
     for (const char of who) hash = (hash * 31 + char.codePointAt(0)) >>> 0;
     return [who, { provider: 'say', id: 'Yuna', rate: who === 'narr' ? 170 : 150 + hash % 41 }];
   })) : voices ?? story.voices;
-  return Object.assign(Object.create(null), selected);
+  const result = Object.assign(Object.create(null), selected);
+  const { speed } = PACES[storyPace(story)];
+  if (speed === 1) return result;
+  for (const [who, voice] of Object.entries(result)) {
+    if (voice?.speed !== undefined) continue;
+    if (voice?.provider === 'vstudio') result[who] = { ...voice, speed };
+    if (voice?.provider === 'say') result[who] = { ...voice, rate: Math.round((voice.rate ?? 175) * speed), speed };
+  }
+  return result;
 }
 
 export function directionParams(text = '') {
@@ -147,31 +165,33 @@ export function similarity(a, b) {
 }
 
 export function estimateStory(story) {
+  const { gap, lead, tail, secPerChar } = PACES[storyPace(story)];
   const scenes = storyScenes(story);
   const lines = speechLines(story);
   const count = lines.reduce((sum, line) => sum + chars(line.t), 0);
   const pauses = scenes.reduce((sum, scene) =>
-    sum + lead(scene) + tail(scene) + GAP * Math.max(0, scene.lines.length - 1), 0);
-  return { chars: count, seconds: count * 0.133 + pauses, scenes: scenes.length, lines: lines.length };
+    sum + (scene.lead ?? lead) + (scene.tail ?? tail) + gap * Math.max(0, scene.lines.length - 1), 0);
+  return { chars: count, seconds: count * secPerChar + pauses, scenes: scenes.length, lines: lines.length };
 }
 
 export function buildTimeline(story, durs, { files } = {}) {
+  const { gap, lead, tail } = PACES[storyPace(story)];
   let seconds = 0;
   let endFrame = 0;
   // 반 프레임의 부동소수점 오차를 보정한다.
   const frame = () => Math.round(seconds * FPS + 1e-9);
   const scenes = storyScenes(story).map((scene, i) => {
     const startFrame = endFrame;
-    seconds += lead(scene);
+    seconds += scene.lead ?? lead;
     const lines = scene.lines.map(({ who, t }, j) => {
-      if (j > 0) seconds += GAP;
+      if (j > 0) seconds += gap;
       const start = frame() / FPS;
       const dur = durs[i]?.[j];
       if (!Number.isFinite(dur) || dur < 0) throw new Error(`${scene.id}의 ${j + 1}번 음성 길이가 잘못됐다.`);
       seconds += dur;
       return { who, t, start, end: frame() / FPS, file: files?.[i]?.[j] ?? null };
     });
-    seconds += tail(scene);
+    seconds += scene.tail ?? tail;
     endFrame = frame();
     return {
       id: scene.id, start: startFrame / FPS, end: endFrame / FPS, dur: (endFrame - startFrame) / FPS,
