@@ -27,7 +27,7 @@ sch0718이 만든 Claude Code 플러그인 여섯 개를 한곳에 모은 마켓
 | [session-move](plugins/session-move) | Code 탭 세션을 다른 계정·다른 기기로 옮김 | 사용량 한도로 계정을 바꿀 때, 새 기기로 이사할 때 | `/plugin install session-move@sch0718-plugins` |
 | [offline-doc-bundle](plugins/offline-doc-bundle) | 마크다운을 인터넷 없이 열리는 HTML·PDF 묶음으로 | 회의 자료를 메일로 보내거나 폐쇄망에 반입할 때 | `/plugin install offline-doc-bundle@sch0718-plugins` |
 | [architecture-motion](plugins/architecture-motion) | 구성 변화·요청 흐름·장애 전파를 움직이는 그림으로 | 재구성 전후 설명, 장애 회고 발표 | `/plugin install architecture-motion@sch0718-plugins` |
-| [story-video](plugins/story-video) | 이야기를 기승전결 대본·장면 그림·음성·자막의 5~10분 영상으로 | 창작 이야기, 커뮤니티의 유명한 이야기를 영상으로 만들 때 | `/plugin install story-video@sch0718-plugins` |
+| [story-video](plugins/story-video) | 이야기를 수집·고르기·구성·대본·낭독·낭독 검증·그림·자막 여덟 단계로 5~10분 영상이나 쇼츠로 | 창작 이야기, 커뮤니티의 유명한 이야기를 영상으로 만들 때 | `/plugin install story-video@sch0718-plugins` |
 
 ## 상황별로 고르기
 
