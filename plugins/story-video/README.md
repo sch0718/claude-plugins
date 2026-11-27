@@ -51,14 +51,17 @@ node scripts/build.mjs examples/mini all --provider say
 node scripts/build.mjs examples/mini all --provider say --format shorts
 ```
 
-## 그림 방식: 게임 컷씬식 (0.3.0)
+## 그림 방식: 게임 컷씬식
 
-`story.json`의 `style`을 `{"mode": "cutscene", "prompt": "…"}`로 쓰면 장면마다 웹툰 패널 한 장에 효과를 얹어요. 쇼츠에 권해요.
+`story.json`의 `style`을 `{"mode": "cutscene", "prompt": "…"}`로 쓰면 장면마다 패널 그림 한 장에 움직임과 효과를 얹어요. 쇼츠에 권해요.
 
-- `fx`: 안개(`fog`)·비(`rain`)·눈(`snow`)·붉은 색조(`redmoon`)·어둠(`dark`)·번쩍임(`flash`)
+- 컷: 한 장면을 문장 경계에 맞춰 2~4.5초 컷으로 나누고, 같은 그림을 확대·클로즈업·좌우 이동으로 번갈아 보여 줘요. `!`로 끝나는 문장에서는 짧게 확대(줌 펀치)해요.
+- `fx`: 안개(`fog`)·비(`rain`)·눈(`snow`)·붉은 색조(`redmoon`)·어둠(`dark`)·번쩍임(`flash`)·흔들림(`shake`)
 - `sfx`: 장면 시작부터 몇 초에 낼 효과음(`sfx/<이름>.wav`). 파일이 없으면 건너뛰어요.
-- `anim`: 주요 장면만 Codex가 2×2 같은 격자 시트로 그리고(`art.mjs --anim`), 칸을 `fps`대로 넘겨요. 시트가 없으면 확대·이동으로 대신해요.
+- `anim`: Codex가 2×2 같은 격자 시트로 그리고(`art.mjs --anim`), 칸을 `fps`대로 넘기며 칸 사이를 살짝 섞어요. `style.anim`에 적으면 모든 장면의 기본값이 되고, `anim: false`로 장면마다 끌 수 있어요. 시트가 없으면 컷과 카메라 움직임으로 대신해요. 그림은 편당 장면+시트 30장까지 권해요.
 - 쇼츠 자막은 크게, 유튜브 화면 단추를 피해 위 12%·아래 25%·오른쪽 13% 밖에 둬요.
+
+화풍 프리셋 `{"preset": "photoreal"}`(한국 드라마 스틸 느낌의 실사풍)과 `{"preset": "webtoon"}`(한국 웹툰 컬러)은 일반·컷씬 두 모드에서 다 써요(컷씬이면 `"mode": "cutscene"`을 함께 적어요). 인물은 모두 지어낸 얼굴로 그려요.
 
 예시 `examples/mini-cutscene/story.json`(3장면, 약 23초)도 그림 없이 렌더돼요.
 
