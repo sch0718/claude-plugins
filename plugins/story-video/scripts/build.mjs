@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
-import { artPath, buildTimeline, FORMATS, FPS, selectVoices, speechLines, storyFormat, storyScenes, toSrt, validateStory } from './lib.mjs';
+import { artPath, NARR, buildTimeline, FORMATS, FPS, selectVoices, speechLines, storyFormat, storyScenes, toSrt, validateStory } from './lib.mjs';
 import { dur, estimate, loadEnv, overFree, speak, voiceFile } from './tts.mjs';
 import { captionLayout, cutsceneMode, kenBurns, mixSfx, panelInputs, placeholder, renderPanel,
   sceneFade, validateCutscene, videoEncoding } from './cutscene.mjs';
@@ -287,7 +287,7 @@ async function finishVideo(items, audio, dir, timelinePath, formatName, cutscene
   mkdirSync(subsDir, { recursive: true });
   mkdirSync(finishedDir, { recursive: true });
   const captions = items.map(({ scene }) => scene.lines.map((line, i) => ({
-    text: line.t, line, out: path.join(subsDir, `${scene.id}-${i + 1}.png`), color: line.who === 'narr' ? '#ffffff' : '#ffe9a8',
+    text: line.t, line, out: path.join(subsDir, `${scene.id}-${i + 1}.png`), color: NARR.test(line.who) ? '#ffffff' : '#ffe9a8',
   })).filter(sub => sub.line.start < sub.line.end));
   const captionInputs = [timelinePath, script('subs.py'), script('lib.mjs')];
   const layoutFile = path.join(subsDir, 'layout.json');

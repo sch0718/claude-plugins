@@ -3,7 +3,7 @@
 창작 이야기, 인터넷 커뮤니티에서 유명한 이야기, 요즘 많이 회자되는 이야기를 가로 5~10분 영상이나 세로 쇼츠(3분 이하)로 만드는 개인용 Claude Code 플러그인이에요. 긴 이야기는 여러 편으로 나눠요.
 
 - 결과물은 `final.mp4`(가로 1920×1080 또는 세로 1080×1920, 30fps, 한글 자막을 구워 넣음), 휴대폰용 `final-phone.mp4`, 자막 파일 `subtitles.srt`, 출처 목록 `sources.md`, 원본과 비교한 검토 `review.md`예요.
-- 그림은 Codex CLI의 이미지 생성으로, 음성은 로컬 VoiceStudio 앱이나 macOS `say`·Edge TTS로, 낭독 검증은 로컬 faster-whisper로 해서 따로 드는 비용이 없어요.
+- 그림은 Codex CLI의 이미지 생성으로, 음성은 최종본은 로컬 VoiceStudio 앱의 배역별 복제 목소리로, 임시판은 macOS `say`로, 낭독 검증은 로컬 faster-whisper로 해서 따로 드는 비용이 없어요.
 - 업로드는 하지 않아요. 올릴 때는 narrated-video 스킬의 업로드 절을 써요.
 
 ## 설치
@@ -51,12 +51,36 @@ node scripts/build.mjs examples/mini all --provider say
 node scripts/build.mjs examples/mini all --provider say --format shorts
 ```
 
+## 그림 방식: 게임 컷씬식 (0.3.0)
+
+`story.json`의 `style`을 `{"mode": "cutscene", "prompt": "…"}`로 쓰면 장면마다 웹툰 패널 한 장에 효과를 얹어요. 쇼츠에 권해요.
+
+- `fx`: 안개(`fog`)·비(`rain`)·눈(`snow`)·붉은 색조(`redmoon`)·어둠(`dark`)·번쩍임(`flash`)
+- `sfx`: 장면 시작부터 몇 초에 낼 효과음(`sfx/<이름>.wav`). 파일이 없으면 건너뛰어요.
+- `anim`: 주요 장면만 Codex가 2×2 같은 격자 시트로 그리고(`art.mjs --anim`), 칸을 `fps`대로 넘겨요. 시트가 없으면 확대·이동으로 대신해요.
+- 쇼츠 자막은 크게, 유튜브 화면 단추를 피해 위 12%·아래 25%·오른쪽 13% 밖에 둬요.
+
+예시 `examples/mini-cutscene/story.json`(3장면, 약 23초)도 그림 없이 렌더돼요.
+
+```bash
+node scripts/build.mjs examples/mini-cutscene all --provider say --format shorts
+```
+
+긴 이야기는 편당 2분 30초~3분 쇼츠 여러 편으로 나누고, 한 편씩 끝까지 만들어요(`story-outline`).
+
+## 0.3.0에서 바뀐 것
+
+- 게임 컷씬식 화면(위 절), 쇼츠 시리즈 편 나누기.
+- 해설 배역은 `narr`·`narr_<이름>` 최대 2개, 대본의 모든 `who`에 목소리를 배정해야 해요(없는 배역을 해설 목소리로 대신 읽지 않아요). 나이별 배역(`_child`·`_young`·`_adult`·`_old`)은 `base`를 적어요.
+- 최종본은 VoiceStudio 복제 프로필만, 한 엔진(model), 배역끼리 프로필을 나눠 쓰지 않아요. `--provider say`는 임시판이에요. 배역 후보 표는 `node scripts/cast.mjs <에피소드>`.
+- 낭독 검증에 「목소리 일관성」(배역별 평균 음높이, 3반음 이탈)이 더해졌어요.
+
 ## 지키는 것
 
 - 수집한 이야기는 줄거리·사실관계만 가져와 새로 써요. 실존 일반인의 실명·신상은 빼거나 바꾸고, 실화라고 단정할 수 없으면 「전해지는 이야기」로 밝혀요.
 - 저작권이 살아 있는 소설·웹툰·영화 같은 창작물의 줄거리는 다루지 않아요.
 - 그림에는 글자·말풍선·워터마크를 넣지 않고, 실존 인물이나 기존 작품의 화풍을 흉내 내지 않아요.
-- VoiceStudio 기본 엔진의 가중치는 비상업 라이선스(CC-BY-NC)예요. 공개하거나 수익을 내는 영상이면 다른 엔진이나 공급자를 골라 주세요.
+- VoiceStudio 기본 엔진의 가중치는 비상업 라이선스(CC-BY-NC)예요. 공개하거나 수익을 내는 영상이면 상업 사용이 되는 엔진을 골라 주세요. 목소리 복제는 주인 허락이 있는 목소리만 써요.
 
 ## 라이선스
 
