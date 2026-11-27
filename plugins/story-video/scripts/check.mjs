@@ -4,7 +4,8 @@ import path from 'node:path';
 import { parseArgs } from 'node:util';
 import { artPath, estimateStory, FORMATS, speechLines, storyFormat, storyScenes, validateStory, wrapLines } from './lib.mjs';
 import { estimate } from './tts.mjs';
-import { animDir, animSequence, captionBox, captionLayout, cutsceneMode, insideSafe, validateCutscene } from './cutscene.mjs';
+import { animDir, animSequence, captionBox, captionLayout, cutsceneMode, gridCell, insideSafe, motionReport,
+  resolveScenes, validateCutscene } from './cutscene.mjs';
 
 const run = (command, args) => execFileSync(command, args, { stdio: ['ignore', 'pipe', 'pipe'], encoding: 'utf8' });
 const readJson = file => JSON.parse(readFileSync(file, 'utf8'));
@@ -44,20 +45,46 @@ function extract(final, out, at, timeline, width) {
 }
 
 function checkPanels(story, ep, format, timeline, warn) {
+  const playing = new Map();
   try {
     validateCutscene(story);
   } catch (error) {
     warn(error.message);
-    return;
+    return playing;
   }
   const lengths = new Map(timeline?.scenes?.map(scene => [scene.id, scene.dur]));
-  for (const { id, anim } of story.scenes) {
+  for (const { id, anim } of resolveScenes(story)) {
     if (!anim) continue;
     const dir = animDir(ep, format, id);
-    if (!existsSync(dir + '.png')) warn(`${id} 시트가 없다(정지 그림으로 대신한다).`);
+    if (existsSync(dir + '.png')) playing.set(id, anim);
+    else warn(`${id} 시트가 없다(정지 그림으로 대신한다).`);
+    const { cell, readable } = gridCell(format, anim.cols, anim.rows);
+    if (!readable) warn(`${id} 시트 칸(${cell.join('×')})의 비율이나 크기가 권장 범위를 벗어난다.`);
     if (lengths.get(id) < animSequence(anim).length / anim.fps) {
       if (anim.loop === false) warn(`${id} 시트가 끝까지 재생되지 않는다.`);
       else console.log(`${id} 장면이 시트 한 주기보다 짧다.`);
+    }
+  }
+  return playing;
+}
+
+function checkMotion(timeline, cutscene, playing, format, warn) {
+  let cuts = 0;
+  let longest = 0;
+  const stills = [];
+  for (const scene of timeline.scenes) {
+    const report = motionReport(scene, { cutscene, anim: playing.get(scene.id) });
+    cuts += report.cuts;
+    for (const { from, to } of report.stills) {
+      longest = Math.max(longest, to - from);
+      stills.push({ id: scene.id, from, to });
+    }
+  }
+  const average = cuts / timeline.scenes.length;
+  console.log(`움직임 · 장면당 컷 평균 ${average.toFixed(1)} · 정지 구간 ${stills.length}개(최장 ${longest.toFixed(1)}초)`);
+  if (format === 'shorts') {
+    for (const { id, from, to } of stills) {
+      warn(`${id} ${from.toFixed(1)}~${to.toFixed(1)}초가 2초 넘게 정지 화면이다`);
     }
   }
 }
@@ -115,7 +142,7 @@ function main() {
     scene.lines.forEach(({ t }, index) => {
       const label = `${scene.id} ${index + 1}번 문장`;
       if (wrapLines(t, subs.maxChars).length > subs.preferredLines) warn(`${label}의 자막이 ${subs.preferredLines}줄을 넘을 수 있다.`);
-      if ((t.match(/[.?!]/g)?.length ?? 0) >= 2) warn(`${label}의 자막을 문장 단위로 나눈다.`);
+      if ((t.match(/[.?!]+/g)?.length ?? 0) >= 2) warn(`${label}의 자막을 문장 단위로 나눈다.`);
     });
   }
 
@@ -144,10 +171,9 @@ function main() {
   } else {
     warn('시간표가 없다.');
   }
-  if (cutscene) {
-    checkPanels(story, ep, format, timeline, warn);
-    if (format === 'shorts' && !insideSafe(captionBox(subs, 3), format)) warn('세 줄 자막 띠가 쇼츠 안전 영역을 벗어난다.');
-  }
+  const playing = checkPanels(story, ep, format, timeline, warn);
+  if (timeline?.scenes?.length) checkMotion(timeline, cutscene, playing, format, warn);
+  if (cutscene && format === 'shorts' && !insideSafe(captionBox(subs, 3), format)) warn('세 줄 자막 띠가 쇼츠 안전 영역을 벗어난다.');
 
   const final = path.join(out, format, 'final.mp4');
   let video;

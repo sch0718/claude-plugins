@@ -3,7 +3,7 @@ import { appendFileSync, closeSync, existsSync, mkdirSync, openSync, readFileSyn
 import path from 'node:path';
 import { parseArgs } from 'node:util';
 import { FORMATS, storyFormat, validateStory } from './lib.mjs';
-import { animDir, cutsceneMode, cutSheet, sheetSize, styleText, validateCutscene } from './cutscene.mjs';
+import { animDir, cutsceneMode, cutSheet, gridCell, resolveScenes, styleText, validateCutscene } from './cutscene.mjs';
 
 const run = (command, args) => execFileSync(command, args, { stdio: ['ignore', 'pipe', 'pipe'], encoding: 'utf8' });
 
@@ -25,7 +25,7 @@ function prompt(story, scene, format, anim, size = FORMATS[format].art) {
   const grid = anim ? `\n\nDraw a ${anim.cols} x ${anim.rows} grid (columns x rows), equal-sized cells in row-major order, without borders, gutters or margins. Each cell must show the same scene, composition and characters. Match the attached base image in the first cell. Advance the motion slightly in each successive cell: ${anim.motion || 'subtle movement within the scene'}.` : '';
   return `Generate ONE new image with your image generation tool and save it as ${image} in the current directory (PNG, ${shape}, exactly ${w} x ${h}, opaque). Do not create or edit any other file.
 
-This is one scene illustration for an original narrated short story video. Do not imitate any existing artist, comic, animation, game or film, and do not depict any real person. ABSOLUTELY NO text, letters, numbers, signs with writing, speech bubbles, captions, logos, signatures or watermarks anywhere in the image: subtitles are added later.${grid}
+This is one scene illustration for an original narrated short story video. Do not imitate any existing artist, comic, animation, game or film. Every person is fictional: do not make anyone resemble a real person, celebrity, actor or idol. ABSOLUTELY NO text, letters, numbers, signs with writing, speech bubbles, captions, logos, signatures or watermarks anywhere in the image: subtitles are added later.${grid}
 
 ${composition}${characters}SCENE: ${scene.art}
 
@@ -180,6 +180,11 @@ async function main() {
     if (values['dry-run'] || values['sheet-only']) throw new Error('--anim은 --dry-run·--sheet-only와 같이 쓸 수 없다.');
   }
   validateCutscene(story);
+  const scenes = resolveScenes(story);
+  const sheets = scenes.filter(scene => scene.anim).length;
+  const images = scenes.length + sheets;
+  console.log(`그림 계획 · ${format} · 장면 그림 ${scenes.length}장 + 시트 ${sheets}장 = ${images}장.`);
+  if (images > 30) console.warn('경고 · 그림이 이 편·이 크기의 권장 상한 30장을 넘는다.');
   // 0.1.0 작업 폴더(art/<id>.png)의 그림은 처음 art/wide/를 만들 때 그리로 옮긴다
   const legacy = story.scenes.map(scene => path.join(ep, 'art', `${scene.id}.png`)).filter(file => existsSync(file));
   if (!values.anim && format === 'wide' && !existsSync(dir) && legacy.length) {
@@ -194,14 +199,18 @@ async function main() {
 
   const only = values.only?.split(',').map(id => id.trim());
   if (only?.some(id => !story.scenes.some(scene => scene.id === id))) throw new Error('--only에 없는 장면 id가 있다.');
-  const items = story.scenes.filter(scene => !only || only.includes(scene.id))
+  const items = scenes.filter(scene => !only || only.includes(scene.id))
     .filter(scene => !values.anim || scene.anim)
     .map(scene => {
       const anim = values.anim ? scene.anim : undefined;
       const reference = anim && path.join(baseDir, `${scene.id}.png`);
       if (reference && !existsSync(reference)) throw new Error(`${scene.id} 기본 그림을 먼저 그린다.`);
-      const cell = FORMATS[format].art;
-      const size = anim ? sheetSize(cell, anim.cols, anim.rows) : cell;
+      let size = FORMATS[format].art;
+      if (anim) {
+        const { sheet, cell, readable } = gridCell(format, anim.cols, anim.rows);
+        if (!readable) console.warn(`경고 · ${scene.id} 시트 칸(${cell.join('×')})의 비율이나 크기가 권장 범위를 벗어난다.`);
+        size = sheet;
+      }
       return { scene, request: prompt(story, scene, format, anim, size), reference, size };
     });
   if (values.anim && !items.length) {
