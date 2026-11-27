@@ -20,18 +20,52 @@ const sameJson = (file, data) => {
 };
 const tones = { redmoon: '0x741b2c@0.25', dark: '0x080817@0.46' };
 const weather = ['fog', 'rain', 'snow'];
-const effects = [...weather, ...Object.keys(tones), 'flash'];
+const effects = [...weather, ...Object.keys(tones), 'flash', 'shake'];
 const texturesFor = fx => [...new Set(fx.filter(name => weather.includes(name)))];
 
 export const cutsceneMode = story => story?.style?.mode === 'cutscene';
-export const styleText = ({ style }) => style && typeof style === 'object' ? style.prompt ?? '' : style;
+export const PRESETS = {
+  photoreal: 'Cinematic photorealistic film still, like a frame from a Korean TV drama, natural skin texture, soft motivated lighting, shallow depth of field, 35mm lens, subtle film grain, muted realistic color grade, all people are fictional and must not resemble any real person, celebrity, actor or idol, original style',
+  webtoon: 'Full-color Korean webtoon style digital art, bold clean ink line art, flat cel shading with soft gradients, bright saturated colors, expressive faces, manga-style speed lines and impact lines drawn as pure lines without any lettering, no speech bubbles, no panel borders, original style',
+};
 
-export function validateCutscene(story) {
-  if (!cutsceneMode(story)) return story;
-  if (story.style.prompt !== undefined && typeof story.style.prompt !== 'string') {
+const styleObject = style => style && typeof style === 'object';
+export const styleText = ({ style }) => styleObject(style)
+  ? [Object.hasOwn(PRESETS, style.preset) ? PRESETS[style.preset] : undefined, style.prompt].filter(Boolean).join(', ')
+  : style;
+
+export function validateStyle(style) {
+  if (!styleObject(style)) return;
+  if (Object.hasOwn(style, 'preset') && (typeof style.preset !== 'string' || !Object.hasOwn(PRESETS, style.preset))) {
+    throw new Error(`style.preset에는 ${Object.keys(PRESETS).join(', ')}만 쓴다.`);
+  }
+  if (Object.hasOwn(style, 'prompt') && typeof style.prompt !== 'string') {
     throw new Error('style.prompt는 문자열이어야 한다.');
   }
-  const integer = (value, low, high) => Number.isInteger(value) && value >= low && value <= high;
+}
+
+const integer = (value, low, high) => Number.isInteger(value) && value >= low && value <= high;
+
+export function validAnim(anim, label) {
+  if (!integer(anim?.cols, 1, 4) || !integer(anim.rows, 1, 4)
+      || !Number.isFinite(anim.fps) || anim.fps < 0.5 || anim.fps > 30
+      || (anim.loop !== undefined && typeof anim.loop !== 'boolean')
+      || (anim.blend !== undefined && typeof anim.blend !== 'boolean')
+      || (anim.motion !== undefined && typeof anim.motion !== 'string')) {
+    throw new Error(`${label}은 cols·rows 1~4, fps 0.5~30, loop·blend 참·거짓, motion 문자열을 쓴다.`);
+  }
+  const count = anim.cols * anim.rows;
+  if (anim.seq !== undefined
+    ? !Array.isArray(anim.seq) || !anim.seq.length || anim.seq.some(cell => !integer(cell, 0, count - 1))
+    : !integer(anim.frames, 1, count)) {
+    throw new Error(`${label}은 seq에 0~${count - 1}번 칸을 하나 이상 넣거나 frames에 1~${count}를 쓴다.`);
+  }
+}
+
+export function validateCutscene(story) {
+  validateStyle(story.style);
+  if (!cutsceneMode(story)) return story;
+  if (story.style.anim !== undefined) validAnim(story.style.anim, 'style.anim');
   for (const { id, fx, sfx, anim } of story.scenes) {
     if (fx !== undefined && (!Array.isArray(fx) || fx.some(name => !effects.includes(name)))) {
       throw new Error(`${id}의 fx에는 ${effects.join(', ')}만 쓴다.`);
@@ -40,22 +74,17 @@ export function validateCutscene(story) {
       !Number.isFinite(event?.t) || event.t < 0 || typeof event.name !== 'string' || !/^[\w-]+$/.test(event.name)))) {
       throw new Error(`${id}의 sfx에는 0 이상의 t와 영문·숫자·밑줄·붙임표로 된 name을 쓴다.`);
     }
-    if (anim === undefined) continue;
-    if (!integer(anim?.cols, 1, 4) || !integer(anim.rows, 1, 4)
-        || !Number.isFinite(anim.fps) || anim.fps < 0.5 || anim.fps > 30
-        || (anim.loop !== undefined && typeof anim.loop !== 'boolean')
-        || (anim.motion !== undefined && typeof anim.motion !== 'string')) {
-      throw new Error(`${id}의 anim은 cols·rows 1~4, fps 0.5~30, loop 참·거짓, motion 문자열을 쓴다.`);
-    }
-    const count = anim.cols * anim.rows;
-    if (anim.seq !== undefined
-      ? !Array.isArray(anim.seq) || !anim.seq.length || anim.seq.some(cell => !integer(cell, 0, count - 1))
-      : !integer(anim.frames, 1, count)) {
-      throw new Error(`${id}의 anim은 seq에 0~${count - 1}번 칸을 하나 이상 넣거나 frames에 1~${count}를 쓴다.`);
-    }
+    if (anim !== undefined && anim !== false) validAnim(anim, `${id}의 anim`);
   }
   return story;
 }
+
+export function sceneAnim(story, scene) {
+  if (!cutsceneMode(story) || scene.anim === false) return undefined;
+  return scene.anim ?? story.style.anim;
+}
+
+export const resolveScenes = story => story.scenes.map(scene => ({ ...scene, anim: sceneAnim(story, scene) }));
 
 export const animSequence = anim => anim.seq ?? Array.from({ length: anim.frames }, (_, i) => i);
 
@@ -84,6 +113,14 @@ export function sheetSize([w, h], cols, rows) {
   const ratio = w * cols / (h * rows);
   return [[1024, 1024], [1536, 1024], [1024, 1536]].reduce((best, size) =>
     Math.abs(size[0] / size[1] - ratio) < Math.abs(best[0] / best[1] - ratio) ? size : best);
+}
+
+export function gridCell(formatName, cols, rows) {
+  const art = FORMATS[formatName].art;
+  const sheet = sheetSize(art, cols, rows);
+  const cell = [Math.floor(sheet[0] / cols), Math.floor(sheet[1] / rows)];
+  const aspectError = Math.abs((cell[0] / cell[1]) / (art[0] / art[1]) - 1);
+  return { sheet, cell, aspectError, readable: aspectError <= 0.12 && Math.min(...cell) >= 340 };
 }
 
 export const SAFE_AREA = { shorts: { left: 54, top: 230, right: 940, bottom: 1440 } };
@@ -119,6 +156,125 @@ export function kenBurns(frames, kb, { w, h }) {
     + `zoompan=z='${zoom}':x='${x}':y='(ih-ih/zoom)/2':d=${frames}:s=${w}x${h}:fps=${FPS}`;
 }
 
+const minShot = 2;
+const targetShot = 3;
+const maxShot = 4.5;
+const toFrame = seconds => Math.round(seconds * FPS);
+const isPan = kind => kind === 'left' || kind === 'right';
+const panZoom = 1.12;
+const zooms = {
+  in: [1, 0.08], out: [1.08, -0.08], close: [1.35, 0.07], drift: [1, 0.05],
+};
+
+export function shotPlan(scene, { anim } = {}) {
+  const { start, dur, kb, lines = [] } = scene;
+  if (anim) return [{ from: 0, to: toFrame(dur), kind: 'drift' }];
+
+  const first = ['in', 'out', 'left', 'right'].includes(kb) ? kb : 'in';
+  if (dur < 2 * minShot) return [{ from: 0, to: toFrame(dur), kind: first }];
+  const candidates = lines.slice(1).map(line => line.start - start).sort((a, b) => a - b);
+  const boundaries = [0];
+  // 시간표의 프레임 시각을 빼면 정수 초에도 작은 오차가 생긴다.
+  const tolerance = 1e-9;
+  let last = 0;
+  for (const [i, at] of candidates.entries()) {
+    if (at - last >= minShot - tolerance && dur - at >= minShot - tolerance
+        && (at - last >= targetShot - tolerance || (candidates[i + 1] ?? dur) - last > maxShot + tolerance)) {
+      boundaries.push(at);
+      last = at;
+    }
+  }
+  boundaries.push(dur);
+
+  const shots = [];
+  let pan = first === 'left' ? 'right' : 'left';
+  for (let i = 1; i < boundaries.length; i++) {
+    const from = boundaries[i - 1];
+    const length = boundaries[i] - from;
+    const count = length > maxShot + tolerance ? Math.ceil((length - tolerance) / targetShot) : 1;
+    for (let j = 0; j < count; j++) {
+      const index = shots.length;
+      const kind = index === 0 ? first : index % 2 ? 'close' : pan;
+      const end = j + 1 === count ? boundaries[i] : from + length * (j + 1) / count;
+      shots.push({ from: shots.at(-1)?.to ?? 0, to: toFrame(end), kind });
+      if (index > 0 && isPan(kind)) pan = pan === 'left' ? 'right' : 'left';
+    }
+  }
+  return shots;
+}
+
+export function hitEvents(scene, fx = []) {
+  // 첫 흔들림은 장면 페이드 인(sceneFade) 직후에 시작해 가려지지 않게 한다.
+  const frames = new Set(fx.includes('shake') ? [Math.min(9, Math.floor(toFrame(scene.dur ?? 0) / 2))] : []);
+  for (const line of scene.lines ?? []) {
+    if (/![!?]*[\s"'“”‘’«»「」『』]*$/u.test(line.t)) frames.add(toFrame(line.start - scene.start));
+  }
+  return [...frames].sort((a, b) => a - b);
+}
+
+function shotExpression(shots, expression, from = 0, to = shots.length) {
+  if (to - from === 1) return expression(shots[from]);
+  // 가운데에서 나눠 ffmpeg 식의 중첩 깊이를 줄인다.
+  const mid = Math.floor((from + to) / 2);
+  return `if(lt(on,${shots[mid].from}),${shotExpression(shots, expression, from, mid)},${shotExpression(shots, expression, mid, to)})`;
+}
+
+const shotProgress = ({ from, to }) => `(on-(${from}))/${Math.max(1, to - from - 1)}`;
+
+function hitOffsets(hits, length, offset) {
+  return hits.map(frame => {
+    const k = `(on-(${frame}))`;
+    return `+if(gte(${k},0)*lt(${k},${length}),${offset(k)},0)`;
+  }).join('');
+}
+
+export function cameraFilter(shots, hits, { w, h, frames, still, shake, focusY = 0.5 }) {
+  const zoom = shotExpression(shots, shot => {
+    if (isPan(shot.kind)) return panZoom;
+    const [start, change] = zooms[shot.kind];
+    return `${start}+(${change})*${shotProgress(shot)}`;
+  }) + hitOffsets(hits, 8, k => `0.06*(1-${k}/8)`);
+  const x = shotExpression(shots, shot => {
+    if (shot.kind === 'left') return `1-${shotProgress(shot)}`;
+    if (shot.kind === 'right') return shotProgress(shot);
+    return '0.5';
+  });
+  const y = shotExpression(shots, shot => shot.kind === 'close' ? focusY : '0.5');
+  const dx = shake ? hitOffsets(hits, 9, k => `24*sin(${k}*2.1)*(1-${k}/9)`) : '';
+  const dy = shake ? hitOffsets(hits, 9, k => `24*cos(${k}*1.7)*(1-${k}/9)`) : '';
+  return `scale=${w * 2}:${h * 2}:force_original_aspect_ratio=increase,crop=${w * 2}:${h * 2},setsar=1,`
+    + `zoompan=z='${zoom}':x='(iw-iw/zoom)*(${x})${dx}':y='(ih-ih/zoom)*(${y})${dy}'`
+    + `:d=${still ? frames : 1}:s=${w}x${h}:fps=${FPS}`;
+}
+
+export function motionReport(scene, { cutscene, anim }) {
+  const stills = [];
+  const addStill = (from, to) => stills.push({ from: from / FPS, to: to / FPS });
+  if (!cutscene) {
+    const travel = isPan(scene.kb) ? 1 - 1 / 1.1 : 0.12;
+    if (scene.dur > 2 && travel / scene.dur < 0.015) stills.push({ from: 0, to: scene.dur });
+    return { cuts: 1, stills };
+  }
+
+  const shots = shotPlan(scene, { anim });
+  if (anim) {
+    const order = frameOrder(anim, toFrame(scene.dur), FPS);
+    let from = 0;
+    for (let to = 1; to <= order.length; to++) {
+      if (order[to] === order[from]) continue;
+      if (to - from > 2 * FPS) addStill(from, to);
+      from = to;
+    }
+  } else {
+    for (const { from, to, kind } of shots) {
+      const seconds = (to - from) / FPS;
+      const travel = isPan(kind) ? 1 - 1 / panZoom : Math.abs(zooms[kind][1]);
+      if (seconds > 2 && travel / seconds < 0.015) addStill(from, to);
+    }
+  }
+  return { cuts: shots.length, stills };
+}
+
 export function placeholder(scene, index, { w, h }) {
   const colors = [0x242e40, 0x302638, 0x24372f, 0x3b2c24, 0x242940, 0x393321];
   const color = (colors[index % colors.length] + 0x010101 * (Math.floor(index / colors.length) % 16)).toString(16);
@@ -142,7 +298,7 @@ export function fxFilter(fx, { w, h, frames }) {
   const filters = [];
   let source = '[base]';
   for (const name of fx) {
-    if (name === 'flash') continue;
+    if (name === 'flash' || name === 'shake') continue;
     const label = `[fx${filters.length}]`;
     if (Object.hasOwn(tones, name)) {
       // 4:2:0에서는 색차 한 점에 반투명 색이 여러 번 섞인다.
@@ -242,10 +398,14 @@ export async function renderPanel({ scene, storyScene, index, ep, formatName, ar
   const frames = Math.round(scene.dur * FPS);
   if (frames < 1) throw new Error(`${scene.id}의 길이가 한 프레임보다 짧다.`);
   const { manifest } = panelInputs({ scene, storyScene, ep, formatName, art });
+  const fx = storyScene?.fx ?? [];
   mkdirSync(path.dirname(output), { recursive: true });
   const tmp = mkdtempSync(path.join(path.dirname(output), '.panel-'));
   try {
     let input, base;
+    const camera = (still, anim) => cameraFilter(shotPlan(scene, { anim }), hitEvents(scene, fx), {
+      w, h, frames, still, shake: fx.includes('shake'), focusY: formatName === 'shorts' ? 0.38 : 0.5,
+    });
     if (manifest.sheet) {
       const { anim } = storyScene;
       const dir = animDir(ep, formatName, storyScene.id);
@@ -254,15 +414,16 @@ export async function renderPanel({ scene, storyScene, index, ep, formatName, ar
         symlinkSync(path.resolve(cells[cell]), path.join(tmp, `f${String(i + 1).padStart(5, '0')}.png`));
       });
       input = ['-framerate', String(FPS), '-i', path.join(tmp, 'f%05d.png')];
-      base = `scale=${w}:${h}:force_original_aspect_ratio=increase,crop=${w}:${h},setsar=1`;
+      const blend = anim.blend === false ? '' : "tmix=frames=3:weights='1 2 1',";
+      base = blend + camera(false, anim);
     } else if (manifest.art) {
       input = ['-i', art];
-      base = kenBurns(frames, scene.kb, format);
+      base = camera(true);
     } else {
       input = placeholder(scene, index, format);
       base = 'null';
     }
-    const { filter, textures } = fxFilter(storyScene?.fx ?? [], { ...format, frames, fps: FPS });
+    const { filter, textures } = fxFilter(fx, { ...format, frames });
     for (const name of textures) {
       input.push('-loop', '1', '-framerate', String(FPS), '-i', makeTexture(ep, formatName, name, format));
     }

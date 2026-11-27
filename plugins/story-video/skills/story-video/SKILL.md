@@ -21,9 +21,9 @@ description: 이야기(창작, 인터넷 커뮤니티의 유명한 이야기, �
 | 4 | `story-script` | 해설·대사·연기 지시 | `story.json`의 `lines` → `check.mjs ep01` | Opus 5.5 (이 세션) |
 | 5 | `story-voice` | 배역 검사·낭독 | `cast.mjs ep01` → `build.mjs ep01 voice` → `voice/`, `out/timeline.json`, `out/voice-cast.md` | VoiceStudio(임시판은 say) |
 | 6 | `story-voice-check` | 음성 인식으로 대조, 오독 다시 만들기, 목소리 일관성 검사 | `voicecheck.mjs ep01` → `out/voice-check.md` | 로컬 faster-whisper |
-| 7 | `story-visual` | 그림 방식 정하기, 장면 그림, 움직임 영상 | `art.mjs ep01` → `contact.jpg` 확인, `build.mjs ep01 visual` | Codex `gpt-6.2-sol` 이미지 생성, ffmpeg |
+| 7 | `story-visual` | 화풍 선택, 장면 그림과 움직임 영상. 쇼츠는 컷씬 모드 권장 | `art.mjs ep01` → `contact.jpg` 확인, 컷씬 시트는 `art.mjs ep01 --anim`, `build.mjs ep01 visual` | Codex `gpt-6.2-sol` 이미지 생성, ffmpeg |
 | 8 | `story-finish` | 자막 입히기, 기계 확인, 원본과 비교 검토 | `build.mjs ep01 finish`, `check.mjs ep01 --frames …`, `review.md` | ffmpeg, 이 세션 |
-| 9 | 올리기 | narrated-video 스킬의 「업로드」 절 | | |
+| 9 | 올리기 | narrated-video 스킬의 「업로드」 절. 각색이면 slug 폴더 `desc.txt`의 고지 문장을 설명란에 넣고 원문 출처 URL은 넣지 않는다 | | |
 
 - 4와 5 사이에 사용자에게 대본(장면별 문장·연기 지시)을 보여 주고 고칠 곳을 받는다. 대본이 굳으면 `cast.mjs ep01`로 후보와 배정을 확인한 뒤 음성을 만든다.
 - 7의 그림 그리기는 대본이 굳으면 5·6과 따로 돌려도 된다(Codex와 VoiceStudio는 서로 다른 자원을 쓴다). 움직임 영상(`visual`)은 시간표가 있어야 한다.

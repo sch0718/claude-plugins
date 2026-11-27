@@ -63,6 +63,7 @@ test('효과 필터와 30fps 기준 페이드', () => {
   }
   assert.equal((filter.match(/overlay=/g) ?? []).length, 3);
   assert.deepEqual(textures, ['fog', 'snow', 'rain']);
+  assert.deepEqual(fxFilter(['shake'], format), fxFilter([], format));
   assert.match(fxFilter([], { ...format, frames: 8 }).filter, /fade=in:s=0:n=4,fade=out:s=4:n=3/);
   assert.throws(() => fxFilter(['unknown'], format), /효과/);
 });
@@ -116,7 +117,8 @@ test('네 색 시트를 자르고, 빠진 칸을 복구하고, 패널 프레임 
     await cutSheet(sheet, 2, 2, cells);
     assert.ok(existsSync(files[1]));
     const output = path.join(ep, 'panel.mp4');
-    await renderPanel({ scene: { id: 's01', dur: 1.1 }, storyScene: { id: 's01', anim, fx: ['redmoon', 'flash'] },
+    await renderPanel({ scene: { id: 's01', start: 0, dur: 1.1, lines: [] },
+      storyScene: { id: 's01', anim, fx: ['redmoon', 'flash'] },
       index: 0, ep, formatName: 'shorts', art: path.join(ep, 'missing.png'), output });
     const frames = execFileSync('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-count_frames',
       '-show_entries', 'stream=nb_read_frames', '-of', 'csv=p=0', output], { encoding: 'utf8' });
@@ -124,6 +126,8 @@ test('네 색 시트를 자르고, 빠진 칸을 복구하고, 패널 프레임 
     const pixel = at => ffmpeg(['-ss', at, '-i', output, '-vf', 'scale=1:1', '-frames:v', '1',
       '-f', 'rawvideo', '-pix_fmt', 'rgb24', 'pipe:1']);
     assert.ok(pixel('0.35')[2] > 150);
+    const mixed = pixel('0.5');
+    assert.ok(mixed[1] > 30 && mixed[2] > 30);
     assert.ok(pixel('0.55')[1] > 150);
   } finally {
     rmSync(ep, { recursive: true, force: true });

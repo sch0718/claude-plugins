@@ -5,7 +5,7 @@ import { parseArgs } from 'node:util';
 import { artPath, NARR, buildTimeline, FORMATS, FPS, PACES, selectVoices, speechLines, storyFormat, storyPace, storyScenes, toSrt, validateStory } from './lib.mjs';
 import { dur, estimate, loadEnv, overFree, speak, voiceFile } from './tts.mjs';
 import { captionLayout, cutsceneMode, kenBurns, mixSfx, panelInputs, placeholder, renderPanel,
-  sceneFade, validateCutscene, videoEncoding } from './cutscene.mjs';
+  resolveScenes, sceneFade, validateCutscene, videoEncoding } from './cutscene.mjs';
 
 const readJson = file => JSON.parse(readFileSync(file, 'utf8'));
 const mtime = file => statSync(file, { throwIfNoEntry: false })?.mtimeMs ?? -Infinity;
@@ -242,7 +242,7 @@ async function videoStages(ep, out, storyFile, story, formatName, stage, { jobs,
   }
   const timeline = readJson(timelinePath);
   const cutscene = cutsceneMode(story);
-  const source = new Map(story.scenes.map(scene => [scene.id, scene]));
+  const source = new Map(resolveScenes(story).map(scene => [scene.id, scene]));
   const dir = path.join(out, formatName);
   const scenesDir = path.join(dir, 'scenes');
   const items = timeline.scenes.map((scene, index) => ({
