@@ -1,0 +1,4 @@
+# 예시·작업 결과물(그림·음성·영상)은 커밋하지 않는다
+examples/*/art/
+examples/*/voice/
+examples/*/out/
