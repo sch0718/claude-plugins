@@ -1,0 +1,119 @@
+{
+  "title": "등대가 꺼진 밤",
+  "slug": "lighthouse-in-the-rain",
+  "episode": 1,
+  "episodes": 1,
+  "format": "shorts",
+  "style": {
+    "mode": "cutscene",
+    "prompt": "Korean webtoon panel art, stormy coastal palette, amber highlights, original style"
+  },
+  "characters": [
+    {
+      "id": "keeper",
+      "name": "등대지기",
+      "look": "a young lighthouse keeper with short dark hair and a yellow raincoat"
+    }
+  ],
+  "facts": [
+    "폭풍에 등대 불이 꺼졌다",
+    "등대지기가 손전등으로 배에 길을 알렸다"
+  ],
+  "voices": {
+    "narr": {
+      "provider": "say",
+      "id": "Yuna",
+      "rate": 170
+    }
+  },
+  "scenes": [
+    {
+      "id": "s01",
+      "beat": "기",
+      "cast": [],
+      "kb": "in",
+      "lead": 1.6,
+      "art": "A rocky coast and an unlit lighthouse during a storm at night.",
+      "fx": [
+        "rain",
+        "dark",
+        "flash"
+      ],
+      "sfx": [
+        {
+          "t": 0,
+          "name": "thunder"
+        }
+      ],
+      "lines": [
+        {
+          "who": "narr",
+          "t": "폭풍이 몰아치자 등대 불이 꺼졌다."
+        },
+        {
+          "who": "narr",
+          "t": "바다에는 배 한 척이 남아 있었다."
+        }
+      ]
+    },
+    {
+      "id": "s02",
+      "beat": "승",
+      "cast": [
+        "keeper"
+      ],
+      "kb": "right",
+      "lead": 1.6,
+      "art": "The keeper raises a flashlight from the top of the tower and aims it over the waves.",
+      "fx": [
+        "fog",
+        "rain"
+      ],
+      "anim": {
+        "cols": 2,
+        "rows": 2,
+        "fps": 4,
+        "loop": true,
+        "seq": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "motion": "the flashlight beam sweeps across the waves"
+      },
+      "lines": [
+        {
+          "who": "narr",
+          "t": "등대지기는 손전등을 들고 탑에 올랐다."
+        },
+        {
+          "who": "narr",
+          "t": "파도 위로 불빛을 세 번 흔들었다."
+        }
+      ]
+    },
+    {
+      "id": "s03",
+      "beat": "결",
+      "cast": [],
+      "kb": "out",
+      "lead": 1.6,
+      "art": "A fishing boat entering a sheltered harbor, its amber deck lamp reflecting in calm water.",
+      "lines": [
+        {
+          "who": "narr",
+          "t": "배에서도 불빛이 세 번 깜빡였다."
+        },
+        {
+          "who": "narr",
+          "t": "배는 암초를 돌아 항구로 들어왔다."
+        }
+      ],
+      "fx": [
+        "redmoon",
+        "snow"
+      ]
+    }
+  ]
+}

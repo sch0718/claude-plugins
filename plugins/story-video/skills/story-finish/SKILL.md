@@ -20,6 +20,7 @@ node <플러그인>/scripts/build.mjs <에피소드> finish [--format shorts] [-
 
 - 자막은 문장 음성이 나오는 동안 나온다. 해설은 흰 글씨, 대사는 노란 글씨. wide는 화면 아래 두 줄 이내, shorts는 화면 아래 4분의 1(쇼츠 화면 단추 자리)보다 위에 세 줄 이내.
 - 이 Mac의 ffmpeg에는 자막 필터가 없어서 Pillow로 투명 PNG를 그려 `overlay`로 얹는다. 장면마다 한 번만 다시 인코딩한다.
+- 게임 컷씬식 쇼츠는 한 줄 12자, 두 줄을 권장하며 세 줄까지 쓴다. 컷씬 효과음은 `audio-sfx.wav`에 합쳐 최종본에 넣는다.
 - 결과: `final.mp4`(wide 1920×1080, shorts 1080×1920, 30fps, AAC), `final-phone.mp4`(절반 크기). 유튜브 자막 트랙은 `out/subtitles.srt`.
 
 ## 2) 기계 확인
@@ -30,6 +31,7 @@ node <플러그인>/scripts/check.mjs <에피소드> [--format shorts] --frames 
 
 - 길이·해상도·fps·음성 트랙, timeline 총길이와의 차(0.5초 넘으면 문제), shorts면 3분 이하인지 나온다.
 - `--frames`의 시각마다 `out/<format>/frames/t<초>.png`와 그 시각에 보여야 할 자막이 나온다. 시각은 장면 가운데·문장 가운데로 고른다(`out/timeline.json`의 `start`·`end`). PNG를 Read로 열어 한글이 깨지지 않는지, 자막이 정해진 줄 수 안인지, 자막이 그 장면 그림 위에 있는지, 쇼츠면 자막·인물 얼굴이 화면 아래 4분의 1에 걸리지 않는지 본다.
+- 게임 컷씬식 쇼츠는 자막 띠 전체가 위 12%·아래 25%·왼쪽 5%·오른쪽 13%를 피하는지 프레임에서 확인한다.
 
 ## 3) 원본과 비교 검토 (`review.md`)
 
