@@ -4,6 +4,8 @@ import path from 'node:path';
 import { parseArgs } from 'node:util';
 import { artPath, buildTimeline, FORMATS, FPS, selectVoices, speechLines, storyFormat, storyScenes, toSrt, validateStory } from './lib.mjs';
 import { dur, estimate, loadEnv, overFree, speak, voiceFile } from './tts.mjs';
+import { captionLayout, cutsceneMode, kenBurns, mixSfx, panelInputs, placeholder, renderPanel,
+  sceneFade, validateCutscene, videoEncoding } from './cutscene.mjs';
 
 const readJson = file => JSON.parse(readFileSync(file, 'utf8'));
 const mtime = file => statSync(file, { throwIfNoEntry: false })?.mtimeMs ?? -Infinity;
@@ -147,16 +149,6 @@ async function makeTimeline(story, ep, out, inputs, results, force) {
   console.log(`시간표·자막·음성 ${timeline.total.toFixed(3)}초를 저장했다.`);
 }
 
-function motion(frames, kb, { w, h }) {
-  const progress = `on/${Math.max(1, frames - 1)}`;
-  const pan = kb === 'left' || kb === 'right';
-  const zoom = pan ? '1.1' : kb === 'out' ? `1.12-0.12*${progress}` : `1+0.12*${progress}`;
-  const x = kb === 'right' ? `(iw-iw/zoom)*${progress}`
-    : kb === 'left' ? `(iw-iw/zoom)*(1-${progress})` : '(iw-iw/zoom)/2';
-  return `scale=${w * 2}:${h * 2}:force_original_aspect_ratio=increase,crop=${w * 2}:${h * 2},setsar=1,`
-    + `zoompan=z='${zoom}':x='${x}':y='(ih-ih/zoom)/2':d=${frames}:s=${w}x${h}:fps=${FPS}`;
-}
-
 async function makeMp4(output, args) {
   const tmp = output.replace(/\.mp4$/, `.${process.pid}.tmp.mp4`);
   try {
@@ -167,21 +159,14 @@ async function makeMp4(output, args) {
   }
 }
 
-const videoEncoding = crf => ['-an', '-c:v', 'libx264', '-threads', '3', '-preset', 'veryfast', '-crf', String(crf),
-  '-pix_fmt', 'yuv420p'];
-
-async function makeScene(scene, index, art, output, format) {
+async function makeScene({ scene, storyScene, index, ep, formatName, art, output }, cutscene) {
+  if (cutscene) return renderPanel({ scene, storyScene, index, ep, formatName, art, output });
+  const format = FORMATS[formatName];
   const frames = Math.round(scene.dur * FPS);
   if (frames < 1) throw new Error(`${scene.id}의 길이가 한 프레임보다 짧다.`);
   const hasArt = existsSync(art);
-  const colors = [0x242e40, 0x302638, 0x24372f, 0x3b2c24, 0x242940, 0x393321];
-  const color = (colors[index % colors.length] + 0x010101 * (Math.floor(index / colors.length) % 16)).toString(16);
-  const input = hasArt ? ['-i', art]
-    : ['-f', 'lavfi', '-i', `color=c=0x${color}:s=${format.w}x${format.h}:r=${FPS}`];
-  if (!hasArt) console.warn(`${scene.id} 그림이 없어 단색을 쓴다.`);
-  const fadeFrames = Math.min(9, Math.floor(frames / 2));
-  const fade = fadeFrames > 1 ? `,fade=in:s=0:n=${fadeFrames},fade=out:s=${frames - fadeFrames}:n=${fadeFrames - 1}` : '';
-  const filter = `${hasArt ? motion(frames, scene.kb, format) + ',' : ''}format=yuv420p${fade}`;
+  const input = hasArt ? ['-i', art] : placeholder(scene, index, format);
+  const filter = `${hasArt ? kenBurns(frames, scene.kb, format) + ',' : ''}format=yuv420p${sceneFade(frames)}`;
   await makeMp4(output, [...input, '-filter_threads', '2', '-vf', filter, '-frames:v', String(frames), ...videoEncoding(14)]);
 }
 
@@ -234,50 +219,69 @@ async function joinVideo(output, audio, clips, force) {
   }
 }
 
-function visualInputs(ep, art, storyFile, timelinePath) {
+function visualInputs(item, storyFile, timelinePath, cutscene) {
+  const { ep, art } = item;
+  const inputs = [storyFile, timelinePath, script('build.mjs'), script('lib.mjs'), script('cutscene.mjs')];
+  if (cutscene) {
+    const { ready, manifest, files } = panelInputs(item);
+    return { ready: ready && sameText(item.inputsFile, JSON.stringify(manifest)), files: [...inputs, ...files] };
+  }
   const dir = path.dirname(art);
   const root = path.join(ep, 'art');
   const source = existsSync(art) ? art : [dir, root, ep].find(existsSync);
-  return [storyFile, timelinePath, script('build.mjs'), script('lib.mjs'), source, ...(dir === root ? [root] : [])];
+  return { ready: !existsSync(item.inputsFile), files: [...inputs, source, ...(dir === root ? [root] : [])] };
 }
 
-async function videoStages(ep, out, storyFile, formatName, stage, { jobs, force, noPhone }) {
+const sameText = (file, text) => existsSync(file) && readFileSync(file, 'utf8') === text;
+
+async function videoStages(ep, out, storyFile, story, formatName, stage, { jobs, force, noPhone }) {
   const timelinePath = path.join(out, 'timeline.json');
   const audio = path.join(out, 'audio.wav');
   if (!existsSync(audio) || !fresh(timelinePath, [storyFile, path.join(out, 'voices.json'), audio])) {
     throw new Error('voice 또는 timeline 단계를 먼저 실행한다.');
   }
   const timeline = readJson(timelinePath);
-  const format = FORMATS[formatName];
+  const cutscene = cutsceneMode(story);
+  const source = new Map(story.scenes.map(scene => [scene.id, scene]));
   const dir = path.join(out, formatName);
   const scenesDir = path.join(dir, 'scenes');
-  const items = timeline.scenes.map((scene, i) => {
-    const art = artPath(ep, formatName, scene.art);
-    return { scene, i, art, inputs: visualInputs(ep, art, storyFile, timelinePath),
-      video: path.join(scenesDir, `${scene.id}.mp4`) };
-  });
+  const items = timeline.scenes.map((scene, index) => ({
+    scene, storyScene: source.get(scene.id), index, ep, formatName, art: artPath(ep, formatName, scene.art),
+    video: path.join(scenesDir, `${scene.id}.mp4`), inputsFile: path.join(scenesDir, `${scene.id}.inputs.json`),
+  }));
+  const sceneFresh = item => {
+    const { ready, files } = visualInputs(item, storyFile, timelinePath, cutscene);
+    return ready && fresh(item.video, files);
+  };
+  const mixedAudio = () => mixSfx({ timeline, story, ep, audio, outDir: dir });
+  let track;
 
   if (stage === 'visual' || stage === 'all') {
     mkdirSync(scenesDir, { recursive: true });
     await parallelScenes(items.length, jobs, async index => {
-      const { scene, i, art, inputs, video } = items[index];
-      if (!force && fresh(video, inputs)) {
-        console.log(`${scene.id} 기존 장면을 쓴다.`);
+      const item = items[index];
+      if (!force && sceneFresh(item)) {
+        console.log(`${item.scene.id} 기존 장면을 쓴다.`);
         return;
       }
-      await makeScene(scene, i, art, video, format);
-      console.log(`${scene.id} 장면을 만들었다.`);
+      const manifest = await makeScene({ ...item, output: item.video }, cutscene);
+      if (cutscene) save(item.inputsFile, JSON.stringify(manifest));
+      else rmSync(item.inputsFile, { force: true });
+      console.log(`${item.scene.id} 장면을 만들었다.`);
     });
-    await joinVideo(path.join(dir, 'video.mp4'), audio, items.map(({ video, scene }) => ({ file: video, scene })), force);
+    track = await mixedAudio();
+    await joinVideo(path.join(dir, 'video.mp4'), track, items.map(({ video, scene }) => ({ file: video, scene })), force);
   }
   if (stage === 'finish' || stage === 'all') {
-    const stale = items.find(({ video, inputs }) => !fresh(video, inputs));
+    const stale = items.find(item => !sceneFresh(item));
     if (stale) throw new Error(`${stale.scene.id} 장면 영상이 없거나 오래됐다. visual 단계를 먼저 실행한다.`);
-    await finishVideo(items, audio, dir, timelinePath, format, { jobs, force, noPhone });
+    await finishVideo(items, track ?? await mixedAudio(), dir, timelinePath, formatName, cutscene, { jobs, force, noPhone });
   }
 }
 
-async function finishVideo(items, audio, dir, timelinePath, format, { jobs, force, noPhone }) {
+async function finishVideo(items, audio, dir, timelinePath, formatName, cutscene, { jobs, force, noPhone }) {
+  const format = FORMATS[formatName];
+  const layout = captionLayout(formatName, cutscene);
   const subsDir = path.join(dir, 'subs');
   const finishedDir = path.join(dir, 'finished-scenes');
   mkdirSync(subsDir, { recursive: true });
@@ -286,24 +290,31 @@ async function finishVideo(items, audio, dir, timelinePath, format, { jobs, forc
     text: line.t, line, out: path.join(subsDir, `${scene.id}-${i + 1}.png`), color: line.who === 'narr' ? '#ffffff' : '#ffe9a8',
   })).filter(sub => sub.line.start < sub.line.end));
   const captionInputs = [timelinePath, script('subs.py'), script('lib.mjs')];
-  const needed = captions.flat().filter(job => force || !fresh(job.out, captionInputs));
+  const layoutFile = path.join(subsDir, 'layout.json');
+  const layoutJson = JSON.stringify(layout);
+  const layoutChanged = cutscene ? !sameText(layoutFile, layoutJson) : existsSync(layoutFile);
+  if (cutscene) captionInputs.push(script('cutscene.mjs'));
+  const needed = captions.flat().filter(job => force || layoutChanged || !fresh(job.out, captionInputs));
   if (needed.length) {
     const jobFile = path.join(dir, `.subs-${process.pid}.json`);
     save(jobFile, JSON.stringify(needed.map(({ text, out, color }) => ({ text, out, color }))));
     try {
-      const layout = JSON.stringify({ w: format.w, h: format.h, ...format.subs });
-      const { stderr } = await run('uv', ['run', '--with', 'pillow', 'python', script('subs.py'), jobFile, layout]);
+      const { stderr } = await run('uv', ['run', '--with', 'pillow', 'python', script('subs.py'), jobFile, layoutJson]);
       if (stderr.trim()) console.warn(stderr.trim());
     } finally {
       rmSync(jobFile, { force: true });
     }
+  }
+  if (layoutChanged) {
+    if (cutscene) save(layoutFile, layoutJson);
+    else rmSync(layoutFile, { force: true });
   }
 
   const clips = items.map(({ scene }) => path.join(finishedDir, `${scene.id}.mp4`));
   await parallelScenes(items.length, jobs, async i => {
     const { scene, video } = items[i];
     if (!force && fresh(clips[i], [video, ...captions[i].map(sub => sub.out)])) return;
-    await addSubtitles(scene, video, captions[i], clips[i], format.subs);
+    await addSubtitles(scene, video, captions[i], clips[i], layout);
     console.log(`${scene.id} 자막을 영상에 얹었다.`);
   });
 
@@ -343,6 +354,7 @@ async function main() {
   const storyFile = path.join(ep, 'story.json');
   const story = validateStory(readJson(storyFile));
   const format = storyFormat(story, values.format);
+  if (['visual', 'finish', 'all'].includes(stage)) validateCutscene(story);
   mkdirSync(out, { recursive: true });
 
   if (['voice', 'timeline', 'all'].includes(stage)) {
@@ -372,7 +384,7 @@ async function main() {
     if (stage !== 'timeline') save(path.join(out, 'voice-cast.md'), castReport(voices, lines, profiles, baseVoices));
   }
   if (['visual', 'finish', 'all'].includes(stage)) {
-    await videoStages(ep, out, storyFile, format, stage, { jobs, force: values.force, noPhone: values['no-phone'] });
+    await videoStages(ep, out, storyFile, story, format, stage, { jobs, force: values.force, noPhone: values['no-phone'] });
   }
 }
 

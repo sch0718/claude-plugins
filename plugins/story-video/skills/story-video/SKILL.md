@@ -36,6 +36,10 @@ description: 이야기(창작, 인터넷 커뮤니티의 유명한 이야기, �
 - 최종본은 한 VoiceStudio 엔진에서 배역별 복제 프로필과 정수 `seed`를 정해 쓴다. `say`는 임시판에 쓴다.
 - 문장별 지시는 속도만 반영한다. 낭독 검증에서는 배정, 파일명, 같은 배역의 음높이를 확인한다.
 
+## 긴 이야기를 쇼츠 시리즈로
+
+`story-outline`에서 편 수와 편별 기승전결을 정하고 `ep01/`부터 `epNN/`까지 폴더를 둔다. 한 편의 대본부터 마무리 검토까지 끝낸 뒤 다음 편으로 넘어간다. 여러 편을 동시에 돌리지 않는다. 게임 컷씬식의 화면 설정은 구성·대본 단계에서 시간표를 만들기 전에 쓴다.
+
 ## 작업 폴더 규약
 
 ```
@@ -44,8 +48,9 @@ description: 이야기(창작, 인터넷 커뮤니티의 유명한 이야기, �
 └── <slug>/
     ├── sources.md                                                    (2)
     └── ep01/
-        ├── story.json      뼈대·facts(3) → lines·direction(4) → style(7)
+        ├── story.json      뼈대·facts(3) → lines·direction(4) → 그림 방식(7, 컷씬 설정은 3·4)
         ├── voice/          문장 음성 캐시                              (5·6)
+        ├── sfx/            효과음(게임 컷씬식, 있으면)                  (7)
         ├── art/<format>/   장면 그림, contact.jpg, prompts/, logs/     (7)
         ├── out/            timeline.json, audio.wav, subtitles.srt, voices.json, voice-cast.md, voice-check.json·.md (5·6)
         │   └── <format>/   scenes/, video.mp4 (7)  subs/, final.mp4, final-phone.mp4, frames/ (8)

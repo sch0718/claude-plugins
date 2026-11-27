@@ -4,6 +4,7 @@ import path from 'node:path';
 import { parseArgs } from 'node:util';
 import { artPath, estimateStory, FORMATS, speechLines, storyFormat, storyScenes, validateStory, wrapLines } from './lib.mjs';
 import { estimate } from './tts.mjs';
+import { animDir, animSequence, captionBox, captionLayout, cutsceneMode, insideSafe, validateCutscene } from './cutscene.mjs';
 
 const run = (command, args) => execFileSync(command, args, { stdio: ['ignore', 'pipe', 'pipe'], encoding: 'utf8' });
 const readJson = file => JSON.parse(readFileSync(file, 'utf8'));
@@ -42,6 +43,25 @@ function extract(final, out, at, timeline, width) {
   console.log(`${at}초 · ${path.relative(process.cwd(), file)} · 자막 ${timeline ? line?.t ?? '없음' : '확인 불가'}`);
 }
 
+function checkPanels(story, ep, format, timeline, warn) {
+  try {
+    validateCutscene(story);
+  } catch (error) {
+    warn(error.message);
+    return;
+  }
+  const lengths = new Map(timeline?.scenes?.map(scene => [scene.id, scene.dur]));
+  for (const { id, anim } of story.scenes) {
+    if (!anim) continue;
+    const dir = animDir(ep, format, id);
+    if (!existsSync(dir + '.png')) warn(`${id} 시트가 없다(정지 그림으로 대신한다).`);
+    if (lengths.get(id) < animSequence(anim).length / anim.fps) {
+      if (anim.loop === false) warn(`${id} 시트가 끝까지 재생되지 않는다.`);
+      else console.log(`${id} 장면이 시트 한 주기보다 짧다.`);
+    }
+  }
+}
+
 function main() {
   const { positionals: [dir, ...extra], values } = parseArgs({
     options: {
@@ -75,7 +95,9 @@ function main() {
     process.exitCode = 1;
     return;
   }
-  const { w, h, subs, phone } = FORMATS[format];
+  const { w, h, phone } = FORMATS[format];
+  const cutscene = cutsceneMode(story);
+  const subs = captionLayout(format, cutscene);
   const min = Number(values.min ?? (format === 'shorts' ? 0 : 300));
   const max = Number(values.max ?? (format === 'shorts' ? 180 : 600));
   if (!Number.isFinite(min) || !Number.isFinite(max) || min < 0 || max < min) return usageError();
@@ -121,6 +143,10 @@ function main() {
     }
   } else {
     warn('시간표가 없다.');
+  }
+  if (cutscene) {
+    checkPanels(story, ep, format, timeline, warn);
+    if (format === 'shorts' && !insideSafe(captionBox(subs, 3), format)) warn('세 줄 자막 띠가 쇼츠 안전 영역을 벗어난다.');
   }
 
   const final = path.join(out, format, 'final.mp4');

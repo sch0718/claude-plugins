@@ -40,6 +40,7 @@ def wrap(text, fits):
 
 def draw_caption(job, layout):
     width, height = layout["w"], layout["h"]
+    cx = layout.get("cx", width / 2)
     max_lines = layout["maxLines"]
     max_chars = layout["maxChars"] if width < height else float("inf")
     for size in range(layout["size"], layout["minSize"] - 1, -2):
@@ -71,12 +72,12 @@ def draw_caption(job, layout):
         top = bottom - len(lines) * line_height
         half_width = max(font.getlength(line) for line in lines) / 2 + 28
         draw.rounded_rectangle(
-            (width / 2 - half_width, top - 4, width / 2 + half_width, bottom),
-            radius=22, fill=(0, 0, 0, 115),
+            (cx - half_width, top - 4, cx + half_width, bottom),
+            radius=22, fill=(0, 0, 0, layout.get("boxAlpha", 115)),
         )
         for index, line in enumerate(lines):
             draw.text(
-                (width / 2, top + 7 + index * line_height), line,
+                (cx, top + 7 + index * line_height), line,
                 font=font, anchor="mt", fill=job["color"], stroke_width=3, stroke_fill="black",
             )
 
