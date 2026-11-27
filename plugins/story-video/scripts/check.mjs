@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
-import { artPath, estimateStory, FORMATS, speechLines, storyFormat, storyScenes, validateStory, wrapLines } from './lib.mjs';
+import { artPath, estimateStory, FORMATS, selectVoices, speechLines, storyFormat, storyScenes, validateStory, wrapLines } from './lib.mjs';
 import { estimate } from './tts.mjs';
 import { animDir, animSequence, captionBox, captionLayout, cutsceneMode, gridCell, insideSafe, motionReport,
   resolveScenes, validateCutscene } from './cutscene.mjs';
@@ -149,8 +149,9 @@ function main() {
   try {
     const setup = path.join(out, 'voices.json');
     const remembered = statSync(setup, { throwIfNoEntry: false })?.mtimeMs >= statSync(storyFile).mtimeMs;
-    const voices = Object.assign(Object.create(null), remembered ? readJson(setup) : story.voices);
     const lines = speechLines(story);
+    // build.mjs와 같은 규칙(pace의 speed 채우기)으로 목소리를 고른다. voices.json은 이미 고른 값이다.
+    const voices = selectVoices(story, lines, { voices: remembered ? readJson(setup) : undefined });
     const needs = Object.entries(estimate(lines, voices, path.join(ep, 'voice')));
     if (needs.length) warn(`빠진 음성 · ${needs.map(([provider, n]) => `${provider} ${n.requests}문장`).join(', ')}.`);
     else console.log('문장 음성이 모두 있다.');
