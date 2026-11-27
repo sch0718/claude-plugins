@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
-import { artPath, NARR, buildTimeline, FORMATS, FPS, selectVoices, speechLines, storyFormat, storyScenes, toSrt, validateStory } from './lib.mjs';
+import { artPath, NARR, buildTimeline, FORMATS, FPS, PACES, selectVoices, speechLines, storyFormat, storyPace, storyScenes, toSrt, validateStory } from './lib.mjs';
 import { dur, estimate, loadEnv, overFree, speak, voiceFile } from './tts.mjs';
 import { captionLayout, cutsceneMode, kenBurns, mixSfx, panelInputs, placeholder, renderPanel,
   sceneFade, validateCutscene, videoEncoding } from './cutscene.mjs';
@@ -372,6 +372,9 @@ async function main() {
       if (errors.length) throw new Error(`목소리 배정 오류\n- ${errors.join('\n- ')}`);
       results = cachedVoice(lines, voices, voiceDir);
     } else {
+      const pace = storyPace(story);
+      const { gap, speed } = PACES[pace];
+      console.log(`낭독 빠르기 ${pace} · 문장 사이 ${gap}초 · 말 빠르기 ${speed}`);
       loadEnv(process.env.STORY_VIDEO_VOICE_ENV ?? '~/.config/story-video/voice.env');
       profiles = await assertCast(voices, lines, { draft: isDraft(voices, values.provider), baseVoices });
       results = await makeVoice(lines, voices, voiceDir, values.force);
