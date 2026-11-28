@@ -10,7 +10,7 @@ export const FORMATS = {
 };
 export const PACES = {
   normal: { gap: 0.35, lead: 0.6, tail: 0.8, speed: 1, secPerChar: 0.133 },
-  fast: { gap: 0.12, lead: 0.2, tail: 0.3, speed: 1.25, secPerChar: 0.112 },
+  fast: { gap: 0.12, lead: 0.2, tail: 0.3, speed: 1.25, secPerChar: 0.15 },
 };
 const chars = text => Array.from(text.replace(/\s/gu, '')).length;
 export const NARR = /^narr(_[\w-]+)?$/;

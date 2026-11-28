@@ -10,4 +10,5 @@
 - 0.3.0부터 `examples/mini`의 `voices`는 작성자 환경의 VoiceStudio 복제 프로필이다. 예시 렌더는 `--provider say`로 돌린다(임시판, 구조 검사만).
 - 게임 컷씬식 설정(`style.mode`·`style.preset`·`style.anim`·`fx`·`sfx`·`anim`)과 컷 분할(`shotPlan`)·움직임 판정(`motionReport`)은 `lib.mjs`가 아니라 `scripts/cutscene.mjs`가 읽고 검증한다. `story.json`을 고치면 시간표가 오래된 것으로 보이므로 `build.mjs <에피소드> timeline --voices <에피소드>/out/voices.json` 뒤에 `visual`을 돌린다.
 - 0.4.0부터 `story.pace`(`fast`·`normal`, 없으면 쇼츠는 `fast`)가 쉼·말 빠르기를 정하고(`lib.mjs`의 `PACES`), `selectVoices`가 fast면 speed를 채운다. 빠르기가 바뀌면 음성 캐시 해시도 바뀐다.
+- 0.5.0부터 컷씬 움직임을 줄였다: 컷 3~7초(`shotPlan`의 `minShot`·`targetShot`·`maxShot`), 느낌표 확대는 장면당 한 번, 정지 판정은 4초(`STILL_SECONDS`), 시트 권장 0.7~1.5fps. 「정신없다」는 사용자 피드백 때문이니 다시 빠르게 바꾸지 않는다. 고르기 단계는 순위표를 사용자에게 보여 주고 멈춘다.
 - 릴리스할 때 `.claude-plugin/plugin.json`의 `version`과 저장소 루트 `.claude-plugin/marketplace.json`의 story-video 항목을 함께 고친다.

@@ -16,7 +16,7 @@ description: 이야기(창작, 인터넷 커뮤니티의 유명한 이야기, �
 | # | 스킬 | 하는 일 | 명령·결과 | 맡는 모델 |
 |---|---|---|---|---|
 | 1 | `story-collect` | 이야기 후보 수집 | `collect/<날짜>-<주제>/index.md`, `01.md` … | 검색은 Sonnet 5.5 하위 에이전트 |
-| 2 | `story-select` | 항목별 점수로 고르기 | `selection.md`, `<slug>/sources.md` | 이 세션, 고르기는 사용자 |
+| 2 | `story-select` | 항목별 점수로 순위표를 만들어 사용자에게 보여 주기 | `selection.md`, 고른 뒤 `<slug>/sources.md` | 이 세션, 고르기는 사용자 |
 | 3 | `story-outline` | 기승전결·장면·편 나누기·핵심 사실 | `ep01/story.json`(뼈대, `facts`) | Opus 5.5 (이 세션) |
 | 4 | `story-script` | 해설·대사·연기 지시 | `story.json`의 `lines` → `check.mjs ep01` | Opus 5.5 (이 세션) |
 | 5 | `story-voice` | 배역 검사·낭독 | `cast.mjs ep01` → `build.mjs ep01 voice` → `voice/`, `out/timeline.json`, `out/voice-cast.md` | VoiceStudio(임시판은 say) |
@@ -25,6 +25,7 @@ description: 이야기(창작, 인터넷 커뮤니티의 유명한 이야기, �
 | 8 | `story-finish` | 자막 입히기, 기계 확인, 원본과 비교 검토 | `build.mjs ep01 finish`, `check.mjs ep01 --frames …`, `review.md` | ffmpeg, 이 세션 |
 | 9 | 올리기 | narrated-video 스킬의 「업로드」 절. 각색이면 slug 폴더 `desc.txt`의 고지 문장을 설명란에 넣고 원문 출처 URL은 넣지 않는다 | | |
 
+- **2 뒤에 반드시 멈춘다.** 순위표(어디서·언제 찾은 소재인지, 두세 문장 요약, 신선함·반전 포인트, 점수)를 사용자에게 보여 주고, 사용자가 고르기 전에는 구성·대본으로 넘어가지 않는다. 하위 세션이면 표를 보고하고 기다린다.
 - 4와 5 사이에 사용자에게 대본(장면별 문장·연기 지시)을 보여 주고 고칠 곳을 받는다. 대본이 굳으면 `cast.mjs ep01`로 후보와 배정을 확인한 뒤 음성을 만든다.
 - 7의 그림 그리기는 대본이 굳으면 5·6과 따로 돌려도 된다(Codex와 VoiceStudio는 서로 다른 자원을 쓴다). 움직임 영상(`visual`)은 시간표가 있어야 한다.
 - 시범으로 빨리 볼 때: `build.mjs ep01 all --provider say`(say 음성, 그림이 없으면 단색 자리 그림).
@@ -74,6 +75,7 @@ description: 이야기(창작, 인터넷 커뮤니티의 유명한 이야기, �
 - 2분 넘는 명령(그림 그리기, VoiceStudio 음성, 음성 인식, 렌더)은 Bash 백그라운드로 돌린다.
 - VoiceStudio 규칙(아래)을 brief에 옮겨 적는다.
 - 수집 단계의 웹 검색은 검색 도구(WebSearch·web-fetch 에이전트)만 쓴다.
+- 고르기는 brief에 적힌 기준으로 대신하지 않는다. 순위표를 보고하고 사용자의 선택을 기다린다.
 
 ## VoiceStudio 규칙 요약 (`http://127.0.0.1:3900`)
 
