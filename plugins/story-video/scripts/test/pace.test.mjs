@@ -25,9 +25,9 @@ test('대본 화면 크기로 기본 pace를 고르고 명시한 pace를 우선�
 });
 
 test('대본 길이 어림에 fast 말 빠르기와 쉼을 반영한다', () => {
-  assert.equal(lib.estimateSeconds('한 문장', 'fast'), 3 * 0.112);
+  assert.equal(lib.estimateSeconds('한 문장', 'fast'), 3 * 0.15);
   assert.deepEqual(lib.estimateStory(shorts), {
-    chars: 6, seconds: 6 * 0.112 + (0.2 + 0.3 + 0.12), scenes: 1, lines: 2,
+    chars: 6, seconds: 6 * 0.15 + (0.2 + 0.3 + 0.12), scenes: 1, lines: 2,
   });
 });
 
@@ -46,7 +46,7 @@ test('시간표는 fast 쉼을 적용하고 합성한 음성의 길이는 유지
 test('장면 앞뒤 쉼을 직접 정할 수 있고 normal 기본값은 기존과 같다', () => {
   const explicit = { ...shorts, scenes: [{ ...story.scenes[0], lead: 0, tail: 0.5 }] };
   const normal = { ...shorts, pace: 'normal' };
-  assert.equal(lib.estimateStory(explicit).seconds, 6 * 0.112 + (0.5 + 0.12));
+  assert.equal(lib.estimateStory(explicit).seconds, 6 * 0.15 + (0.5 + 0.12));
   assert.equal(lib.estimateStory(normal).seconds, 6 * 0.133 + (0.6 + 0.8 + 0.35));
   const fastTimeline = lib.buildTimeline(explicit, [[2, 2]]);
   assert.equal(fastTimeline.scenes[0].lines[0].start, 0);

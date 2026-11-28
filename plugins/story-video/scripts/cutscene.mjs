@@ -156,14 +156,14 @@ export function kenBurns(frames, kb, { w, h }) {
     + `zoompan=z='${zoom}':x='${x}':y='(ih-ih/zoom)/2':d=${frames}:s=${w}x${h}:fps=${FPS}`;
 }
 
-const minShot = 2;
-const targetShot = 3;
-const maxShot = 4.5;
+const minShot = 3;
+const targetShot = 5;
+const maxShot = 7;
 const toFrame = seconds => Math.round(seconds * FPS);
 const isPan = kind => kind === 'left' || kind === 'right';
 const panZoom = 1.12;
 const zooms = {
-  in: [1, 0.08], out: [1.08, -0.08], close: [1.35, 0.07], drift: [1, 0.05],
+  in: [1, 0.08], out: [1.08, -0.08], close: [1.2, 0.09], drift: [1, 0.04],
 };
 
 export function shotPlan(scene, { anim } = {}) {
@@ -206,9 +206,9 @@ export function shotPlan(scene, { anim } = {}) {
 export function hitEvents(scene, fx = []) {
   // 첫 흔들림은 장면 페이드 인(sceneFade) 직후에 시작해 가려지지 않게 한다.
   const frames = new Set(fx.includes('shake') ? [Math.min(9, Math.floor(toFrame(scene.dur ?? 0) / 2))] : []);
-  for (const line of scene.lines ?? []) {
-    if (/![!?]*[\s"'“”‘’«»「」『』]*$/u.test(line.t)) frames.add(toFrame(line.start - scene.start));
-  }
+  // 느낌표 확대는 장면마다 첫 번째 한 번만 넣는다(자주 튀면 정신없다).
+  const first = (scene.lines ?? []).find(line => /![!?]*[\s"'“”‘’«»「」『』]*$/u.test(line.t));
+  if (first) frames.add(toFrame(first.start - scene.start));
   return [...frames].sort((a, b) => a - b);
 }
 
@@ -247,6 +247,9 @@ export function cameraFilter(shots, hits, { w, h, frames, still, shake, focusY =
     + `:d=${still ? frames : 1}:s=${w}x${h}:fps=${FPS}`;
 }
 
+// 컷씬은 4초 넘게 아무것도 안 움직일 때만 정지로 본다(짧게 자주 바꾸면 정신없다).
+export const STILL_SECONDS = 4;
+
 export function motionReport(scene, { cutscene, anim }) {
   const stills = [];
   const addStill = (from, to) => stills.push({ from: from / FPS, to: to / FPS });
@@ -262,14 +265,14 @@ export function motionReport(scene, { cutscene, anim }) {
     let from = 0;
     for (let to = 1; to <= order.length; to++) {
       if (order[to] === order[from]) continue;
-      if (to - from > 2 * FPS) addStill(from, to);
+      if (to - from > STILL_SECONDS * FPS) addStill(from, to);
       from = to;
     }
   } else {
     for (const { from, to, kind } of shots) {
       const seconds = (to - from) / FPS;
       const travel = isPan(kind) ? 1 - 1 / panZoom : Math.abs(zooms[kind][1]);
-      if (seconds > 2 && travel / seconds < 0.015) addStill(from, to);
+      if (seconds > STILL_SECONDS && travel / seconds < 0.01) addStill(from, to);
     }
   }
   return { cuts: shots.length, stills };
@@ -280,6 +283,14 @@ export function placeholder(scene, index, { w, h }) {
   const color = (colors[index % colors.length] + 0x010101 * (Math.floor(index / colors.length) % 16)).toString(16);
   console.warn(`${scene.id} 그림이 없어 단색을 쓴다.`);
   return ['-f', 'lavfi', '-i', `color=c=0x${color}:s=${w}x${h}:r=${FPS}`];
+}
+
+// 칸이 오래 머무는 느린 시트일수록 칸 사이를 길게(최대 7프레임) 섞어 부드럽게 넘긴다.
+export function blendFilter(fps) {
+  const frames = Math.max(3, Math.min(7, 2 * Math.floor(FPS / fps / 4) + 1));
+  const half = (frames + 1) / 2;
+  const weights = Array.from({ length: frames }, (_, i) => half - Math.abs(i + 1 - half));
+  return `tmix=frames=${frames}:weights='${weights.join(' ')}',`;
 }
 
 export function sceneFade(frames, flash = false) {
@@ -414,7 +425,7 @@ export async function renderPanel({ scene, storyScene, index, ep, formatName, ar
         symlinkSync(path.resolve(cells[cell]), path.join(tmp, `f${String(i + 1).padStart(5, '0')}.png`));
       });
       input = ['-framerate', String(FPS), '-i', path.join(tmp, 'f%05d.png')];
-      const blend = anim.blend === false ? '' : "tmix=frames=3:weights='1 2 1',";
+      const blend = anim.blend === false ? '' : blendFilter(anim.fps);
       base = blend + camera(false, anim);
     } else if (manifest.art) {
       input = ['-i', art];

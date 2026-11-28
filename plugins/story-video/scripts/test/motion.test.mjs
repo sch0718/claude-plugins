@@ -12,17 +12,17 @@ const cuts = shot => shot.map(({ from, to }) => [from, to]);
 test('짧은 장면은 한 컷이고 문장 경계에 맞추되 끝을 짧게 자르지 않는다', () => {
   assert.deepEqual(cuts(motion.shotPlan(scene(3.9, [0.6, 2]), {})), [[0, 117]]);
   assert.deepEqual(cuts(motion.shotPlan(scene(9, [0.6, 2.4, 5.1, 7.8], 'in', 17.4), {})),
-    [[0, 72], [72, 153], [153, 270]]);
-  assert.deepEqual(cuts(motion.shotPlan(scene(6, [0.6, 2, 4.1]), {})), [[0, 90], [90, 180]]);
+    [[0, 153], [153, 270]]);
+  assert.deepEqual(cuts(motion.shotPlan(scene(6, [0.6, 2, 4.1]), {})), [[0, 180]]);
   const frameAligned = { start: 68 / 30, dur: 9, lines: [{ start: 86 / 30 }, { start: 248 / 30 }] };
   assert.deepEqual(cuts(motion.shotPlan(frameAligned, {})),
-    [[0, 90], [90, 180], [180, 270]]);
+    [[0, 180], [180, 270]]);
 });
 
 test('긴 컷은 균등하게 나누고 이동 방향은 번갈아 쓴다', () => {
   const shots = motion.shotPlan(scene(17.5, [0.6], 'left'), {});
-  assert.deepEqual(cuts(shots), [[0, 88], [88, 175], [175, 263], [263, 350], [350, 438], [438, 525]]);
-  assert.deepEqual(shots.map(shot => shot.kind), ['left', 'close', 'right', 'close', 'left', 'close']);
+  assert.deepEqual(cuts(shots), [[0, 131], [131, 263], [263, 394], [394, 525]]);
+  assert.deepEqual(shots.map(shot => shot.kind), ['left', 'close', 'right', 'close']);
   assert.deepEqual(motion.shotPlan(scene(4.4, [], 'right'), {}), [{ from: 0, to: 132, kind: 'right' }]);
   for (const kb of [undefined, 'unexpected', '']) {
     assert.equal(motion.shotPlan(scene(2, [], kb), {})[0].kind, 'in');
@@ -55,24 +55,30 @@ const exclamation = {
   ],
 };
 
-test('느낌표와 shake의 시점은 장면 기준 프레임으로 센다', () => {
-  assert.deepEqual(motion.hitEvents(exclamation, []), [18, 33, 48]);
-  assert.deepEqual(motion.hitEvents(exclamation, ['shake']), [9, 18, 33, 48]);
+test('느낌표 확대는 장면마다 첫 번째 한 번이고 shake와 함께 장면 기준 프레임으로 센다', () => {
+  assert.deepEqual(motion.hitEvents(exclamation, []), [18]);
+  assert.deepEqual(motion.hitEvents(exclamation, ['shake']), [9, 18]);
   assert.deepEqual(motion.hitEvents({ ...exclamation, dur: 0.4 }, ['shake']).slice(0, 1), [6]);
-  assert.deepEqual(motion.hitEvents({ ...exclamation, start: 18 }, ['shake']), [0, 9, 15, 30]);
+  assert.deepEqual(motion.hitEvents({ ...exclamation, start: 18 }, ['shake']), [0, 9]);
 });
 
 test('일반 모드는 Ken Burns, 컷씬은 컷과 시트 칸으로 정지 구간을 잰다', () => {
   assert.deepEqual(motion.motionReport(scene(17.5), { cutscene: false, anim }),
     { cuts: 1, stills: [{ from: 0, to: 17.5 }] });
   assert.deepEqual(motion.motionReport(scene(4.4, [], 'left'), { cutscene: true }), { cuts: 1, stills: [] });
-  assert.deepEqual(motion.motionReport(scene(17.5), { cutscene: true }), { cuts: 6, stills: [] });
+  assert.deepEqual(motion.motionReport(scene(17.5), { cutscene: true }), { cuts: 4, stills: [] });
+  assert.deepEqual(motion.motionReport(scene(13, [0.2, 6.6], 'in'), { cutscene: true }), { cuts: 2, stills: [] });
   assert.deepEqual(motion.motionReport(scene(5), { cutscene: true, anim }), { cuts: 1, stills: [] });
   assert.deepEqual(motion.motionReport(scene(5), { cutscene: true, anim: { ...anim, seq: [0] } }),
     { cuts: 1, stills: [{ from: 0, to: 5 }] });
   assert.deepEqual(motion.motionReport(scene(5), {
     cutscene: true, anim: { ...anim, fps: 4, seq: [0, 1], loop: false },
   }), { cuts: 1, stills: [{ from: 0.26666666666666666, to: 5 }] });
+});
+
+test('느린 시트일수록 칸 사이를 길게 섞는다', () => {
+  assert.equal(motion.blendFilter(8), "tmix=frames=3:weights='1 2 1',");
+  assert.equal(motion.blendFilter(1), "tmix=frames=7:weights='1 2 3 4 3 2 1',");
 });
 
 test('두 모드에서 프리셋을 합치고 style의 기존 값은 받는다', () => {
@@ -141,10 +147,10 @@ test('ffmpeg의 시트 시퀀스에서도 on이 장면 전체에 걸쳐 증가�
   assert.deepEqual(sequence, still);
 });
 
-test('ffmpeg가 120컷 카메라 식을 해석한다', { skip: !available }, () => {
+test('ffmpeg가 72컷 카메라 식을 해석한다', { skip: !available }, () => {
   const frames = 360 * 30;
   const shots = motion.shotPlan(scene(360), {});
-  assert.equal(shots.length, 120);
+  assert.equal(shots.length, 72);
   assert.equal(render(motion.cameraFilter(shots, [], { w, h, frames, still: true, focusY: 0.5 }), 1).length,
     w * h * 3);
 });

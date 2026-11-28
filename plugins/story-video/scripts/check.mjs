@@ -84,7 +84,7 @@ function checkMotion(timeline, cutscene, playing, format, warn) {
   console.log(`움직임 · 장면당 컷 평균 ${average.toFixed(1)} · 정지 구간 ${stills.length}개(최장 ${longest.toFixed(1)}초)`);
   if (format === 'shorts') {
     for (const { id, from, to } of stills) {
-      warn(`${id} ${from.toFixed(1)}~${to.toFixed(1)}초가 2초 넘게 정지 화면이다`);
+      warn(`${id} ${from.toFixed(1)}~${to.toFixed(1)}초가 정지 화면이다`);
     }
   }
 }

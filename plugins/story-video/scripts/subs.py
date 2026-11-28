@@ -18,6 +18,20 @@ def font_at(size):
 
 
 def wrap(text, fits):
+    lines = greedy_wrap(text, fits)
+    if len(lines) < 2:
+        return lines
+    # 끝말 한두 글자만 다음 줄로 넘어가지 않게, 줄 수는 그대로 두고 가장 짧은 줄 길이로 고르게 나눈다.
+    # 어절 하나보다 짧게 잡으면 어절 가운데를 자르게 되므로 가장 긴 어절부터 본다.
+    start = max(-(-len(text) // len(lines)), *(len(word) for word in text.split()))
+    for limit in range(start, max(map(len, lines)) + 1):
+        balanced = greedy_wrap(text, lambda line: len(line) <= limit and fits(line))
+        if len(balanced) == len(lines):
+            return balanced
+    return lines
+
+
+def greedy_wrap(text, fits):
     lines = []
     line = ""
     for word in text.split():
