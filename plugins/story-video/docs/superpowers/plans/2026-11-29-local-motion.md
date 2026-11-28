@@ -106,8 +106,8 @@ export async function renderMotion(item)                     // 장면 mp4를 it
 필터 구성(한 번의 ffmpeg 호출, 30fps, `-frames:v N`, `videoEncoding(14)`):
 
 1. 입력: 그림마다 `-loop 1 -framerate 30 -t <N/30+1> -i <그림>`. 모든 그림에 같은 `scale=2w:2h:force_original_aspect_ratio=increase,crop=2w:2h,setsar=1`을 적용한다(`cutscene.mjs`의 `kenBurns`와 같은 2배 크기). 기본 그림과 끝 디졸브에 쓸 다음 장면 그림은 같은 색 변환과 `format=yuv420p`로 정규화한다. 알파를 쓰는 키프레임 레이어의 형식은 `yuva420p`로 맞춘다. 그림이 하나도 없으면 `placeholder()`를 단색 영상 입력으로 쓰고, 키프레임 전환과 카메라를 건너뛰어 5단계를 적용한다.
-2. `fade` 전환: `keyPlan(N, images.length)`의 `changes[k-1]`마다 그림 k에 `fade=in:st=<changes/30>:d=1.5:alpha=1`을 걸고 앞 결과 위에 `overlay=format=yuv420`으로 차례로 쌓는다. 전환 시작 전에는 레이어가 완전히 투명하다.
-3. `mci` 전환: 전환마다 임시 폴더에 [앞, 뒤, 뒤] 세 장을 `-framerate 2/3`로 넣고 `minterpolate=fps=30:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:scd=none`, `-frames:v 45`로 2배 크기 PNG 시퀀스나 mp4를 만든다. 결과 프레임 수가 45가 아니거나 ffmpeg 오류면 경고하고 그 전환을 `fade`로 바꾼다. 맞으면 그 클립을 `setpts=PTS+<st>/TB`로 옮겨 `overlay=format=yuv420:eof_action=pass:enable='gte(t,<st>)'`로 얹고, 그 뒤 그림 k를 `overlay=format=yuv420:enable='gte(t,<st+1.5>)'`로 얹는다.
+2. `fade` 전환: `keyPlan(N, images.length)`의 `changes[k-1]`마다 그림 k에 `fade=in:start_frame=<changes[k-1]>:nb_frames=45:alpha=1`을 걸고 앞 결과 위에 `overlay=format=yuv420`으로 차례로 쌓는다. 전환 시작 전에는 레이어가 완전히 투명하다.
+3. `mci` 전환: 전환마다 임시 폴더에 [앞, 뒤, 뒤] 세 장을 `-framerate 2/3`로 넣고 `minterpolate=fps=30:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:scd=none`, `-frames:v 45`로 2배 크기 PNG 시퀀스나 mp4를 만든다. 결과 프레임 수가 45가 아니거나 ffmpeg 오류면 경고하고 그 전환을 `fade`로 바꾼다. 맞으면 그 클립의 타임베이스를 `1/30`으로 맞추고 `setpts=N+<c>`(c = 전환 시작 프레임 번호)로 옮겨 `overlay=format=yuv420:eof_action=pass:enable='gte(n,<c>)'`로 얹고, 그 뒤 그림 k를 `overlay=format=yuv420:enable='gte(n,<c+45>)'`로 얹는다. 시각(t) 대신 프레임 번호(n)로 비교한다(소수 시각 오차로 앞 그림이 한 프레임 다시 보이지 않게). `fade` 전환도 `fade=in:start_frame=<c>:nb_frames=45:alpha=1`처럼 프레임 단위로 쓴다.
 4. 카메라: 키프레임 유무에 관계없이 `yuv420p` 스트림에 `motionCamera(N, scene.kb, format)`을 적용하고 출력을 `format=yuv420p`로 고정한다. 첫 프레임의 카메라 입력은 기본 그림을 정규화한 프레임과 샘플 단위로 같아야 한다.
 5. 장면 경계 처리(그림과 단색 자리 그림에 공통 적용):
    - 시작은 `first`면 첫 15프레임 검정 페이드인. 첫 장면이 아닌 단색 자리 그림은 `K = min(9, floor(N / 2))`가 2 이상이면 첫 `K`프레임 검정 페이드인. 그 밖의 장면은 들어오는 페이드 없이 시작한다.
@@ -117,6 +117,7 @@ export async function renderMotion(item)                     // 장면 mp4를 it
    - 시작 페이드인과 끝 디졸브가 겹치면 페이드인을 먼저 적용해 마지막 프레임의 목표 가중치 1을 보장한다.
 6. 시험(새 `scripts/test/keyframes.test.mjs`에 작성, ffmpeg 없으면 skip): 합성 그림 A(빨강 바탕)·키프레임 B(파랑 바탕)·다음 장면 C(초록 바탕에 대비가 있는 색과 무늬)로
    - N=240(8초) 장면: 출력 프레임 수 240, 0.5초 부근은 빨강 우세, 6초 부근은 파랑 우세, 마지막 프레임은 초록 우세(픽셀 1×1 평균, 기존 cutscene 시험의 `pixel` 방식).
+   - 248프레임 장면(전환 시작 124)의 `mci`·`fade` 모두 169번 프레임이 뒤 그림과 같다(앞 그림으로 돌아가지 않음).
    - `interp: 'mci'`: 같은 배경 위에서 물체 위치만 다른 두 합성 그림으로 렌더하면 프레임 수 240이고 `fade` 대체 경고가 나오지 않는다(경고는 `console.warn`을 시험에서 가로채 확인). 대체 경로는 시험용 가짜 ffmpeg를 두지 않고 구현 검토로 확인한다.
    - 다음 장면에도 키프레임을 하나 두고 전환이 배정될 길이로 `first: false`, `next: null`, `last: true`, `kb: 'out'`을 지정한다. 두 장면의 실제 렌더 그래프에서 장면 전환 처리까지 마친 자막 합성·인코딩 전 출력을 `yuv420p` rawvideo로 뽑는다. 앞 장면의 마지막 프레임과 다음 장면의 첫 프레임에서 모든 Y·U·V 샘플이 바이트 단위로 일치하는지 확인한다. 앞 장면의 `M = 1`인 경우도 같은 방법으로 확인한다.
    - 그림 A → 단색 자리 그림: A의 마지막 프레임과 자리 그림의 첫 프레임이 검정이고, 자리 그림의 페이드인 뒤에는 단색이 보인다.
