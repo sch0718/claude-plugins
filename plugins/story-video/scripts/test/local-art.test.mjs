@@ -37,6 +37,7 @@ test('로컬 요청문에 화풍, 장면, 인물, 금지 문구와 세로 구도
   assert.throws(() => localPrompt(story, { ...scene, cast: ['missing'] }, 'wide'),
     /s01에 없는 인물 id가 있다\(missing\)/);
   assert.match(editPrompt('turn the head'), /same.*face.*turn the head.*no text/i);
+  assert.doesNotMatch(editPrompt('turn the head.'), /\.\./);
 });
 
 test('장면 seed가 없으면 장면 id에서 고정된 seed를 구한다', () => {
