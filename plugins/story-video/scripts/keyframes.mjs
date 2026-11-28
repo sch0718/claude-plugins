@@ -71,8 +71,10 @@ export function motionImages({ storyScene, ep, formatName, art }, warn = () => {
   sceneKeys(storyScene).forEach((_, index) => {
     const number = index + 1;
     const key = keyPath(ep, formatName, storyScene.id, number);
-    if (existsSync(key)) images.push(key);
-    else warn(`${storyScene.id} 키프레임 ${number}번이 없다.`);
+    if (!existsSync(key)) warn(`${storyScene.id} 키프레임 ${number}번이 없다.`);
+    else if (art && existsSync(art) && statSync(key).mtimeMs < statSync(art).mtimeMs) {
+      warn(`${storyScene.id} 키프레임 ${number}번이 장면 그림보다 오래됐다(--keys로 다시 만든다).`);
+    } else images.push(key);
   });
   return images;
 }
@@ -90,15 +92,16 @@ export function motionInputs(item) {
   };
 }
 
-const normalized = ({ w, h }) => `scale=${2 * w}:${2 * h}:force_original_aspect_ratio=increase,crop=${2 * w}:${2 * h},setsar=1,format=yuv420p`;
+const normalized = ({ w, h }, k = 2) => `scale=${k * w}:${k * h}:force_original_aspect_ratio=increase,crop=${k * w}:${k * h},setsar=1,format=yuv420p`;
 const transitionFrames = TRANSITION * FPS;
 
 async function interpolate(before, after, format, file) {
-  const normalize = normalized(format);
+  // 2배 크기에서 보간하면 전환 하나에 몇 분·수 GB가 든다. 최종 크기에서 보간하고 합성용으로 2배로 키운다.
+  const normalize = normalized(format, 1);
   const filters = [
     `[0:v]${normalize}[before]`,
     `[1:v]${normalize},tpad=stop_mode=clone:stop=1[after]`,
-    `[before][after]concat=n=2:v=1:a=0,settb=3/2,setpts=N,minterpolate=fps=${FPS}:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:scd=none[mci]`,
+    `[before][after]concat=n=2:v=1:a=0,settb=3/2,setpts=N,minterpolate=fps=${FPS}:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:scd=none,scale=${2 * format.w}:${2 * format.h},setsar=1[mci]`,
   ];
   // minterpolate가 첫 전환을 보간하려면 뒤 그림을 한 장 더 입력해야 한다.
   await run('ffmpeg', [...ffmpegOptions, '-framerate', '2/3', '-i', before, '-framerate', '2/3', '-i', after,

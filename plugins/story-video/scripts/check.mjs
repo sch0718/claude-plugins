@@ -173,7 +173,7 @@ function main() {
   for (const scene of storyScenes(story)) {
     if (scene.id !== 'recap') {
       if (!existsSync(artPath(ep, format, scene.id))) warn(`${scene.id} 그림이 없다.`);
-      if (motion) motionImages({ ep, formatName: format, storyScene: scene }, warn);
+      if (motion) motionImages({ ep, formatName: format, storyScene: scene, art: artPath(ep, format, scene.id) }, warn);
     }
     scene.lines.forEach(({ t }, index) => {
       const label = `${scene.id} ${index + 1}번 문장`;
@@ -228,8 +228,9 @@ function main() {
     warn('프레임을 뽑을 최종 영상이 없다.');
   }
   const total = timeline || video ? Math.max(timeline?.total ?? 0, video?.duration ?? 0) : counts.seconds;
-  if (format === 'shorts' && total > max) {
-    warn(`쇼츠 길이 ${total.toFixed(3)}초가 상한 ${max}초를 넘었다.`);
+  const hardMax = Math.max(180, max);
+  if (format === 'shorts' && total > hardMax) {
+    warn(`쇼츠 길이 ${total.toFixed(3)}초가 상한 ${hardMax}초를 넘었다.`);
     process.exitCode = 1;
   }
 

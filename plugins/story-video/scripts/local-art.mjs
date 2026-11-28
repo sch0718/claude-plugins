@@ -35,7 +35,7 @@ export function localPrompt(story, scene, formatName) {
 }
 
 export function editPrompt(change) {
-  return `Keep the same photo: same people, faces, clothes, background, lighting and camera framing. Make only this small, natural change: ${change}. No text.\n`;
+  return `Keep the same photo: same people, faces, clothes, background, lighting and camera framing. Make only this small, natural change: ${String(change).replace(/[.\s]+$/, '')}. No text.\n`;
 }
 
 export function sceneSeed(scene) {
