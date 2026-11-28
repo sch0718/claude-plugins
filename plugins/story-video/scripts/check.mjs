@@ -2,10 +2,11 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
-import { artPath, estimateStory, FORMATS, selectVoices, speechLines, storyFormat, storyScenes, validateStory, wrapLines } from './lib.mjs';
+import { artPath, estimateStory, FORMATS, FPS, selectVoices, speechLines, storyFormat, storyScenes, validateStory, wrapLines } from './lib.mjs';
 import { estimate } from './tts.mjs';
 import { animDir, animSequence, captionBox, captionLayout, cutsceneMode, gridCell, insideSafe, motionReport,
   resolveScenes, validateCutscene } from './cutscene.mjs';
+import { keyPlan, motionImages, motionMode, validateMotion } from './keyframes.mjs';
 
 const run = (command, args) => execFileSync(command, args, { stdio: ['ignore', 'pipe', 'pipe'], encoding: 'utf8' });
 const readJson = file => JSON.parse(readFileSync(file, 'utf8'));
@@ -89,6 +90,17 @@ function checkMotion(timeline, cutscene, playing, format, warn) {
   }
 }
 
+function checkKeyMotion(timeline, story, ep, formatName) {
+  const byId = new Map(story.scenes.map(scene => [scene.id, scene]));
+  const transitions = timeline.scenes.map(scene => {
+    const images = motionImages({ ep, formatName, storyScene: byId.get(scene.id), art: artPath(ep, formatName, scene.art) });
+    return keyPlan(Math.round(scene.dur * FPS), images.length).changes.length;
+  });
+  const average = transitions.reduce((sum, count) => sum + count, 0) / transitions.length;
+  const withoutKeys = transitions.filter(count => count === 0).length;
+  console.log(`움직임 · 장면당 키프레임 전환 평균 ${average.toFixed(1)}회 · 키프레임 없는 장면 ${withoutKeys}개`);
+}
+
 function main() {
   const { positionals: [dir, ...extra], values } = parseArgs({
     options: {
@@ -115,6 +127,7 @@ function main() {
   let story, format;
   try {
     story = validateStory(readJson(storyFile));
+    validateMotion(story);
     format = storyFormat(story, values.format);
   } catch (error) {
     warn(`대본이나 화면 형식을 읽을 수 없다(${error.code ?? error.message}).`);
@@ -124,6 +137,7 @@ function main() {
   }
   const { w, h, phone } = FORMATS[format];
   const cutscene = cutsceneMode(story);
+  const motion = motionMode(story);
   const subs = captionLayout(format, cutscene);
   const min = Number(values.min ?? (format === 'shorts' ? 0 : 300));
   const max = Number(values.max ?? (format === 'shorts' ? 180 : 600));
@@ -135,10 +149,32 @@ function main() {
   console.log(`장면 ${counts.scenes}개 · 문장 ${counts.lines}개 · 기승전결 ${present.join('·') || '없음'}.`);
   console.log(`읽는 글 ${counts.chars}자 · 어림 길이 ${minSec(counts.seconds)}.`);
   for (const beat of beats.filter(beat => !present.includes(beat))) warn(`${beat} 비트가 없다.`);
-  if (counts.seconds < min || counts.seconds > max) warn(`어림 길이가 ${minSec(min)}~${minSec(max)} 범위를 벗어났다.`);
+
+  let timeline;
+  const timelineFile = path.join(out, 'timeline.json');
+  if (existsSync(timelineFile)) {
+    try {
+      const data = readJson(timelineFile);
+      if (!Number.isFinite(data?.total) || data.total < 0) throw new Error('시간표 길이가 잘못됐다.');
+      timeline = data;
+      console.log(`시간표 ${timeline.total.toFixed(3)}초.`);
+    } catch {
+      warn('시간표를 읽을 수 없다.');
+    }
+  } else {
+    warn('시간표가 없다.');
+  }
+  const length = timeline?.total ?? counts.seconds;
+  if (length < min || length > max) {
+    const label = timeline ? '시간표 길이' : '어림 길이';
+    warn(`${label}가 ${minSec(min)}~${minSec(max)} 범위를 벗어났다.`);
+  }
 
   for (const scene of storyScenes(story)) {
-    if (scene.id !== 'recap' && !existsSync(artPath(ep, format, scene.id))) warn(`${scene.id} 그림이 없다.`);
+    if (scene.id !== 'recap') {
+      if (!existsSync(artPath(ep, format, scene.id))) warn(`${scene.id} 그림이 없다.`);
+      if (motion) motionImages({ ep, formatName: format, storyScene: scene }, warn);
+    }
     scene.lines.forEach(({ t }, index) => {
       const label = `${scene.id} ${index + 1}번 문장`;
       if (wrapLines(t, subs.maxChars).length > subs.preferredLines) warn(`${label}의 자막이 ${subs.preferredLines}줄을 넘을 수 있다.`);
@@ -159,21 +195,11 @@ function main() {
     warn(`문장 음성을 확인할 수 없다(${error.message}).`);
   }
 
-  let timeline;
-  const timelineFile = path.join(out, 'timeline.json');
-  if (existsSync(timelineFile)) {
-    try {
-      timeline = readJson(timelineFile);
-      console.log(`시간표 ${timeline.total.toFixed(3)}초.`);
-    } catch {
-      timeline = undefined;
-      warn('시간표를 읽을 수 없다.');
-    }
-  } else {
-    warn('시간표가 없다.');
-  }
   const playing = checkPanels(story, ep, format, timeline, warn);
-  if (timeline?.scenes?.length) checkMotion(timeline, cutscene, playing, format, warn);
+  if (timeline?.scenes?.length) {
+    if (motion) checkKeyMotion(timeline, story, ep, format);
+    else checkMotion(timeline, cutscene, playing, format, warn);
+  }
   if (cutscene && format === 'shorts' && !insideSafe(captionBox(subs, 3), format)) warn('세 줄 자막 띠가 쇼츠 안전 영역을 벗어난다.');
 
   const final = path.join(out, format, 'final.mp4');
@@ -202,8 +228,8 @@ function main() {
     warn('프레임을 뽑을 최종 영상이 없다.');
   }
   const total = timeline || video ? Math.max(timeline?.total ?? 0, video?.duration ?? 0) : counts.seconds;
-  if (format === 'shorts' && total > 180) {
-    warn(`쇼츠 길이 ${total.toFixed(3)}초가 180초를 넘었다.`);
+  if (format === 'shorts' && total > max) {
+    warn(`쇼츠 길이 ${total.toFixed(3)}초가 상한 ${max}초를 넘었다.`);
     process.exitCode = 1;
   }
 

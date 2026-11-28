@@ -1,14 +1,14 @@
 # story-video
 
-창작 이야기, 인터넷 커뮤니티에서 유명한 이야기, 요즘 많이 회자되는 이야기를 가로 5~10분 영상이나 세로 쇼츠(3분 이하)로 만드는 개인용 Claude Code 플러그인이에요. 긴 이야기는 여러 편으로 나눠요.
+창작 이야기, 인터넷 커뮤니티에서 유명한 이야기, 요즘 많이 회자되는 이야기를 가로 5~10분 영상, 3분 이하 쇼츠, 10분 세로 영상으로 만드는 개인용 Claude Code 플러그인이에요. 긴 이야기는 여러 편으로 나눠요.
 
 - 결과물은 `final.mp4`(가로 1920×1080 또는 세로 1080×1920, 30fps, 한글 자막을 구워 넣음), 휴대폰용 `final-phone.mp4`, 자막 파일 `subtitles.srt`, 출처 목록 `sources.md`, 원본과 비교한 검토 `review.md`예요.
-- 그림은 Codex CLI의 이미지 생성으로, 음성은 최종본은 로컬 VoiceStudio 앱의 배역별 복제 목소리로, 임시판은 macOS `say`로, 낭독 검증은 로컬 faster-whisper로 해서 따로 드는 비용이 없어요.
+- 그림은 Codex CLI나 로컬 모델로 만들어요. 최종본은 VoiceStudio의 배역별 복제 목소리, 임시판은 macOS `say`로 읽고, 낭독은 로컬 faster-whisper로 확인해요.
 - 업로드는 하지 않아요. 올릴 때는 narrated-video 스킬의 업로드 절을 써요.
 
 ## 설치
 
-필요한 것: Claude Code, Node.js 22 이상, ffmpeg·ffprobe, [uv](https://docs.astral.sh/uv/)(자막을 그리는 Pillow, 음성 인식 faster-whisper용), macOS(`say`, `sips`, 한글 글꼴 AppleSDGothicNeo). 그림을 그리려면 Codex CLI가, VoiceStudio 음성을 쓰려면 VoiceStudio 앱이 필요해요.
+필요한 것: Claude Code, Node.js 22 이상, ffmpeg·ffprobe, [uv](https://docs.astral.sh/uv/)(자막을 그리는 Pillow, 음성 인식 faster-whisper용), macOS(`say`, `sips`, 한글 글꼴 AppleSDGothicNeo). 그림을 그리려면 Codex CLI나 mflux와 로컬 모델이, VoiceStudio 음성을 쓰려면 VoiceStudio 앱이 필요해요.
 
 Claude Code에서:
 
@@ -38,7 +38,7 @@ Claude Code에서:
 node <플러그인>/scripts/check.mjs <에피소드>                  # 장면·문장 수, 어림 길이, 빠진 것
 node <플러그인>/scripts/build.mjs <에피소드> voice            # 낭독 → 시간표·자막 시각
 node <플러그인>/scripts/voicecheck.mjs <에피소드>             # 낭독 검증
-node <플러그인>/scripts/art.mjs <에피소드>                    # 장면 그림 (Codex)
+node <플러그인>/scripts/art.mjs <에피소드>                    # 장면 그림
 node <플러그인>/scripts/build.mjs <에피소드> visual           # 자막 없는 움직임 영상
 node <플러그인>/scripts/build.mjs <에피소드> finish           # 자막 입힌 완성본
 node <플러그인>/scripts/check.mjs <에피소드> --frames 3,60    # 길이 확인, 프레임 PNG
@@ -69,7 +69,13 @@ node scripts/build.mjs examples/mini all --provider say --format shorts
 node scripts/build.mjs examples/mini-cutscene all --provider say --format shorts
 ```
 
-긴 이야기는 편당 2분 30초~3분 쇼츠 여러 편으로 나누고, 한 편씩 끝까지 만들어요(`story-outline`).
+긴 이야기를 일반 쇼츠로 만들 때는 편당 2분 30초~3분으로 나누고, 한 편씩 끝까지 만들어요(`story-outline`).
+
+## 0.6.0에서 바뀐 것
+
+- `art.mjs --engine local`로 디스크에 있는 모델을 써서 장면 그림을 그릴 수 있어요. 모델 설정은 [화면 스킬의 로컬 그림 엔진](skills/story-visual/SKILL.md)에 있어요.
+- `style.mode: "motion"`은 장면 그림과 키프레임을 부드럽게 잇고 카메라를 천천히 움직여요. [모션 대본 예시](examples/mini-motion/story.json)처럼 설정하고, 장면 그림을 그린 뒤 `art.mjs ep --keys`로 키프레임을 만들어요.
+- 10분 세로는 `"format": "shorts"`와 `"pace": "normal"`을 쓰고, `check.mjs ep --min 540 --max 660`으로 점검해요. 시간표가 있으면 그 길이를 기준으로 삼아요.
 
 ## 0.5.0에서 바뀐 것
 

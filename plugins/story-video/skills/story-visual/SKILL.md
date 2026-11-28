@@ -1,6 +1,6 @@
 ---
 name: story-visual
-description: 이야기와 낭독 시간표에 맞춰 화면을 만든다. story.json에서 화풍과 톤을 정하고, Codex CLI로 장면 그림(가로 1536×1024, 쇼츠 1024×1536)을 그린 뒤 자막 없는 video.mp4를 만든다. 일반 모드는 느린 확대·이동(Ken Burns)을 쓰고, 쇼츠에 권장하는 컷씬 모드는 짧은 컷·시트 애니메이션·화면 효과를 쓴다. "장면 그림 그려줘", "그림체 정해줘", "이 장면만 다시 그려줘", "쇼츠용 세로 그림", "컷씬처럼 움직이게", "애니메이션 시트", "화면 만들어줘" 같은 요청이나 story-video 7단계에 쓴다.
+description: 이야기와 낭독 시간표에 맞춰 화면을 만든다. story.json에서 화풍과 톤을 정하고, Codex CLI나 로컬 모델로 장면 그림(가로 1536×1024, 세로 1024×1536)을 그려 자막 없는 video.mp4를 만든다. 일반 모드는 느린 카메라, 컷씬 모드는 컷·시트 애니메이션·화면 효과, motion 모드는 키프레임 전환과 느린 카메라를 쓴다. "장면 그림 그려줘", "그림체 정해줘", "이 장면만 다시 그려줘", "쇼츠용 세로 그림", "컷씬처럼 움직이게", "애니메이션 시트", "화면 만들어줘" 같은 요청이나 story-video 7단계에 쓴다.
 ---
 
 # 7. 화면 (그림과 움직임)
@@ -27,6 +27,18 @@ description: 이야기와 낭독 시간표에 맞춰 화면을 만든다. story.
 | 동화 그림책 | 아이도 보는 이야기 | `Warm children's picture book illustration, soft gouache texture, rounded shapes, gentle pastel colors, original style` |
 
 색·빛·시대는 객체의 `prompt`나 화풍 문자열 끝에 더한다(예시 `cold winter palette of frost blue and candle gold`). 같은 인물은 장면마다 같은 `look` 문장을 쓴다. 실제 사건도 실존 인물과 닮지 않은 얼굴로 그린다.
+
+### 자연스러운 움직임 (`style.mode: "motion"`)
+
+구성·대본 단계에서 시간표를 만들기 전에 화풍과 장면별 키프레임을 정한다. 예시는 `examples/mini-motion/story.json`에 있다.
+
+```json
+"style": {"mode": "motion", "engine": "local", "preset": "photoreal"}
+```
+
+- 장면의 `keys`에 자세, 시선, 손 위치처럼 조금씩 달라지는 동작을 영어로 0~3개 적는다. 눈 깜빡임처럼 빠른 동작은 그림을 겹칠 때 잔상이 생기기 쉬우므로 피한다.
+- `keys`를 생략하면 자세와 시선을 조금 바꾸는 키프레임 한 장을 만든다. `"keys": []`를 쓰면 장면 그림 한 장에 느린 카메라만 적용한다.
+- 키프레임은 `art/<format>/keys/<id>-<번호>.png`에 생긴다. 각 그림에 전환을 포함해 최소 4초를 배정하고, 장면 길이에 맞는 수만큼 앞에서부터 쓴다. 기본 전환은 1.5초 디졸브다. `style.interp: "mci"`를 쓰면 움직임 보간을 시도하고, 실패한 전환은 디졸브로 바꾼다.
 
 ### 게임 컷씬식
 
@@ -64,11 +76,33 @@ node <플러그인>/scripts/art.mjs <에피소드> --format shorts       # 쇼�
 node <플러그인>/scripts/art.mjs <에피소드> --sheet-only          # 모아보기만 다시
 ```
 
-- 장면마다 빈 작업 폴더에서 `codex exec -m gpt-6.2-sol`을 부르고, 나온 그림을 크기에 맞춰 `art/<format>/<id>.png`로 옮긴다. `codex`가 PATH에 없으면 `CODEX_BIN`에 경로를 준다.
+- Codex 엔진은 장면마다 빈 작업 폴더에서 `codex exec -m gpt-6.2-sol`을 부르고, 나온 그림을 크기에 맞춰 `art/<format>/<id>.png`로 옮긴다. `codex`가 PATH에 없으면 `CODEX_BIN`에 경로를 준다.
 - 한 편·한 크기에 장면 그림과 시트를 합쳐 30장까지 권장한다. 장면 그림은 한 장에 약 80초, 2×2 시트는 약 130초 걸린다(2026-11 측정). 장면 10장+시트 10장을 동시 3장으로 그리면 약 12~13분, 30장이면 15~20분이다(재시도 제외). 30장을 넘기기 전에 사용자에게 장수를 알린다. 장면이 10개를 넘으면 Bash 백그라운드로 돌린다.
 - 요청문에는 그림 한 장만 저장하라는 지시, 글자·말풍선·로고·기존 작품 모방·실존 인물과 닮은 얼굴 금지, `cast` 인물의 `look`, 장면의 `art`, `style`을 넣는다. 쇼츠는 중요한 것을 화면 가운데나 위쪽에 둔다(아래쪽은 자막과 쇼츠 화면 단추가 가린다).
 - 같은 대본으로 wide와 shorts를 다 만들면 그림만 크기별로 따로 그린다. 음성·시간표는 같이 쓴다.
 - 0.1.0 작업 폴더의 `art/<id>.png`는 wide 그림으로 그대로 쓰인다.
+
+### 로컬 그림 엔진 (`--engine local`)
+
+mflux와 로컬 모델을 준비하고 `~/.config/story-video/art.env`에 실제로 존재하는 모델의 절대 경로를 쓴다. 설정 파일을 따로 쓰려면 `STORY_VIDEO_ART_ENV`에 경로를 준다. 각 작업에는 해당 모델의 경로가 필요하다.
+
+```dotenv
+ZIMAGE_MODEL=/path/to/z-image-turbo-q4
+FLUX2_MODEL=/path/to/flux2-klein-4b
+```
+
+플러그인 폴더에서 장면 그림을 먼저 그린다. `--keys`는 대본의 `style.engine`에서 `local`을 읽고, 장면 그림을 바탕으로 키프레임을 만든다.
+
+```bash
+node scripts/art.mjs ep --engine local
+node scripts/art.mjs ep --keys
+node scripts/build.mjs ep visual
+```
+
+- 엔진은 `--engine`, `style.engine`, 기본값 `codex` 순으로 고른다. 로컬 모델은 오프라인에서 한 장씩 실행한다. 다른 mflux 작업이 끝난 뒤 시작한다. 저메모리 옵션이 필요하면 `--low-ram`을 붙인다.
+- `--dry-run`으로 모델 없이 요청문을 확인할 수 있다. `--only`로 장면을 고르고, `--force`로 기존 그림을 다시 만든다. 컷씬 시트는 `--engine codex --anim`으로 그린다.
+- 장면 그림은 한 장에 약 5분, 키프레임은 한 장에 약 3분으로 잡는다. 장면 40개와 키프레임 40개를 쓰는 10분 영상은 약 5시간 반이 걸릴 수 있다.
+- 화면 설정을 바꾼 뒤에는 `node scripts/build.mjs ep timeline --voices ep/out/voices.json`으로 시간표를 갱신하고 `visual`을 실행한다. `say`로 낭독한 편은 `timeline`에 `--provider say`를 붙인다.
 
 ### 확인
 
@@ -92,4 +126,5 @@ node <플러그인>/scripts/build.mjs <에피소드> visual [--format shorts] [-
 - 그림이 없는 장면은 단색 자리 그림으로 만든다(대본·시간만 먼저 볼 때).
 - 6분 영상에 M2에서 몇 분 걸린다. 2분 넘을 것 같으면 Bash 백그라운드로 돌린다.
 - 컷씬 모드는 시트 칸을 `fps`대로 넘기며 살짝 확대한다. 시트 파일이 없으면 기본 그림에 컷 분할과 카메라 움직임을 쓴다. `flash`는 장면 첫 0.3초를 흰색에서 시작한다. 효과음은 `audio-sfx.wav`로 섞어 `video.mp4`·`final.mp4`에 넣는다.
-- `check.mjs`는 두 모드의 장면당 평균 컷 수와 정지 구간을 보여 준다. 컷씬은 4초 넘게 컷·칸·카메라가 거의 안 움직인 구간을 정지로 보고, 쇼츠면 경고한다. 장면당 컷 평균이 2를 크게 넘으면 오히려 정신없지 않은지 프레임으로 본다.
+- 일반·컷씬 모드의 `check.mjs`는 장면당 평균 컷 수와 정지 구간을 보여 준다. 컷씬은 4초 넘게 컷·칸·카메라가 거의 안 움직인 구간을 정지로 보고, 쇼츠면 경고한다. 장면당 컷 평균이 2를 크게 넘으면 오히려 정신없지 않은지 프레임으로 본다.
+- motion 모드는 장면당 키프레임 전환 평균과 전환이 없는 장면 수를 보여 준다. 필요한 키프레임 파일이 빠지면 경고한다.

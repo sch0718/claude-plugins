@@ -4,6 +4,9 @@ import path from 'node:path';
 import { parseArgs } from 'node:util';
 import { FORMATS, storyFormat, validateStory } from './lib.mjs';
 import { animDir, cutsceneMode, cutSheet, gridCell, resolveScenes, styleText, validateCutscene } from './cutscene.mjs';
+import { keyFresh, keyPath, keyRecord, motionMode, sceneKeys, validateMotion } from './keyframes.mjs';
+import { LOCAL_SIZES, artEngine, editPrompt, flux2EditArgs, localPrompt, mfluxBin, modelPath, readArtEnv,
+  runMflux, sceneSeed, upscale, zimageArgs } from './local-art.mjs';
 
 const run = (command, args) => execFileSync(command, args, { stdio: ['ignore', 'pipe', 'pipe'], encoding: 'utf8' });
 
@@ -100,6 +103,13 @@ async function makeArt({ scene, request, reference, size }, dir, jobDir, { force
     return true;
   }
 
+  return attemptArt(id, jobDir, retries, async (work, log) => {
+    await generate(model, work, request, log, reference);
+    placeImage(work, id, out, size, reference);
+  });
+}
+
+async function attemptArt(id, jobDir, retries, draw) {
   const work = path.join(jobDir, '.work', id);
   const log = path.join(jobDir, 'logs', `${id}.log`);
   writeFileSync(log, '');
@@ -110,13 +120,13 @@ async function makeArt({ scene, request, reference, size }, dir, jobDir, { force
     mkdirSync(work, { recursive: true });
     try {
       appendFileSync(log, `\n${attempt + 1}번째 시도\n`);
-      await generate(model, work, request, log, reference);
-      placeImage(work, id, out, size, reference);
+      await draw(work, log);
       failure = undefined;
       break;
     } catch (error) {
       failure = error.stderr?.trim() || error.message;
       appendFileSync(log, `\n${failure}\n`);
+      if (error.code === 'MFLUX_BUSY') throw error;
     } finally {
       rmSync(work, { recursive: true, force: true });
     }
@@ -127,6 +137,83 @@ async function makeArt({ scene, request, reference, size }, dir, jobDir, { force
   appendFileSync(log, `\n${status}\n`);
   console.log(status);
   return !failure;
+}
+
+async function localArt({ ep, story, scenes, format, dir, values, retries }) {
+  const keys = values.keys;
+  const items = scenes.flatMap(scene => {
+    const base = path.join(dir, `${scene.id}.png`);
+    if (!keys) return [{ scene, out: base, request: localPrompt(story, scene, format) }];
+    return sceneKeys(scene).map((change, index) => {
+      const number = index + 1;
+      return { scene, base, number, out: keyPath(ep, format, scene.id, number),
+        record: keyRecord(ep, format, scene.id, number), request: editPrompt(change) };
+    });
+  });
+  const images = keys ? 0 : items.length;
+  const edits = keys ? items.length : 0;
+  console.log(`그림 계획 · ${format} · 로컬 · 장면 그림 ${images}장 · 키프레임 ${edits}장 · 어림 ${images * 5 + edits * 3}분(생성 5분·편집 3분 기준)`);
+  if (!items.length) return;
+
+  const prompts = keys ? path.join(dir, 'prompts', 'keys') : path.join(dir, 'prompts');
+  mkdirSync(prompts, { recursive: true });
+  for (const item of items) {
+    item.id = path.basename(item.out, '.png');
+    writeFileSync(path.join(prompts, `${item.id}.txt`), item.request);
+  }
+  console.log(`그림 요청문 ${items.length}개를 저장했다. ${path.relative(process.cwd(), prompts)}`);
+  if (values['dry-run']) return;
+
+  const failed = new Set();
+  const pending = items.filter(({ scene, id, base, out, record, request }) => {
+    if (keys && !existsSync(base)) {
+      if (!failed.has(scene.id)) console.error(`${scene.id} 기본 그림을 먼저 그린다.`);
+      failed.add(scene.id);
+      return false;
+    }
+    const fresh = keys ? keyFresh({ key: out, record, base, prompt: request }) : existsSync(out);
+    if (values.force || !fresh) return true;
+    console.log(`${id} 기존 그림을 쓴다.`);
+    return false;
+  });
+
+  if (pending.length) {
+    const model = modelPath(readArtEnv(), keys ? 'FLUX2_MODEL' : 'ZIMAGE_MODEL');
+    const bin = mfluxBin(keys ? 'mflux-generate-flux2-edit' : 'mflux-generate-z-image-turbo');
+    mkdirSync(path.join(dir, 'logs'), { recursive: true });
+    if (keys) mkdirSync(path.join(dir, 'keys'), { recursive: true });
+
+    for (const [index, { scene, id, base, out, record, request, number }] of pending.entries()) {
+      try {
+        const ok = await attemptArt(id, dir, retries, async (work, log) => {
+          const output = path.join(work, 'raw.png');
+          const promptFile = path.join(prompts, `${id}.txt`);
+          const args = { model, promptFile, size: LOCAL_SIZES[format], output, lowRam: values['low-ram'] };
+          await runMflux(bin, keys
+            ? flux2EditArgs({ ...args, image: base, seed: sceneSeed(scene) + number })
+            : zimageArgs({ ...args, seed: sceneSeed(scene) }), log);
+          if (record) rmSync(record, { force: true });
+          upscale(output, out, FORMATS[format].art);
+          if (record) {
+            const saved = path.join(work, 'prompt.txt');
+            writeFileSync(saved, request);
+            renameSync(saved, record);
+          }
+        });
+        if (!ok) failed.add(scene.id);
+      } catch (error) {
+        if (error.code !== 'MFLUX_BUSY') throw error;
+        console.error(`다른 mflux 작업이 돌고 있어 ${scene.id}부터 멈춘다.`);
+        for (const item of pending.slice(index)) failed.add(item.scene.id);
+        break;
+      }
+    }
+  }
+  if (failed.size) {
+    console.error(`그림 생성 실패 · ${[...failed].sort().join(', ')}`);
+    process.exitCode = 1;
+  }
+  if (!keys) contactSheet(story, format, dir);
 }
 
 function contactSheet(story, format, dir) {
@@ -161,6 +248,7 @@ async function main() {
       only: { type: 'string' }, jobs: { type: 'string', default: '3' }, retries: { type: 'string', default: '2' },
       force: { type: 'boolean' }, model: { type: 'string', default: 'gpt-6.2-sol' },
       'dry-run': { type: 'boolean' }, 'sheet-only': { type: 'boolean' }, format: { type: 'string' }, anim: { type: 'boolean' },
+      engine: { type: 'string' }, keys: { type: 'boolean' }, 'low-ram': { type: 'boolean' },
     },
     allowPositionals: true,
   });
@@ -168,23 +256,35 @@ async function main() {
   const retries = Number(values.retries);
   if (!episode || extra.length || ![1, 2, 3].includes(jobs) || !Number.isSafeInteger(retries) || retries < 0
       || (values['dry-run'] && values['sheet-only'])) {
-    throw new Error('쓰는 법 · node art.mjs <에피소드> [--format wide|shorts] [--only s01,s03] [--jobs 1|2|3] [--retries 2] [--force] [--model 이름] [--dry-run|--sheet-only]');
+    throw new Error('쓰는 법 · node art.mjs <에피소드> [--format wide|shorts] [--only s01,s03] [--jobs 1|2|3] [--retries 2] [--force] [--model 이름] [--engine codex|local] [--anim|--keys] [--low-ram] [--dry-run|--sheet-only]');
   }
   const ep = path.resolve(episode);
   const story = validateStory(JSON.parse(readFileSync(path.join(ep, 'story.json'), 'utf8')));
+  const engine = artEngine(story, values.engine);
   const format = storyFormat(story, values.format);
   const baseDir = path.join(ep, 'art', format);
   const dir = values.anim ? path.join(baseDir, 'anim') : baseDir;
+  if (engine === 'local' && values.anim) {
+    throw new Error('로컬 엔진에서는 --anim을 쓰지 않는다. --engine codex로 그린다.');
+  }
+  if (values.keys) {
+    if (values.anim) throw new Error('--keys는 --anim과 같이 쓸 수 없다.');
+    if (!motionMode(story)) throw new Error('--keys는 motion 모드에서 쓴다.');
+    if (engine !== 'local') throw new Error('--keys는 로컬 엔진에서 쓴다. --engine local을 준다.');
+  }
   if (values.anim) {
     if (!cutsceneMode(story)) throw new Error('--anim은 cutscene 모드에서 쓴다.');
     if (values['dry-run'] || values['sheet-only']) throw new Error('--anim은 --dry-run·--sheet-only와 같이 쓸 수 없다.');
   }
   validateCutscene(story);
+  validateMotion(story);
   const scenes = resolveScenes(story);
-  const sheets = scenes.filter(scene => scene.anim).length;
-  const images = scenes.length + sheets;
-  console.log(`그림 계획 · ${format} · 장면 그림 ${scenes.length}장 + 시트 ${sheets}장 = ${images}장.`);
-  if (images > 30) console.warn('경고 · 그림이 이 편·이 크기의 권장 상한 30장을 넘는다.');
+  if (engine === 'codex') {
+    const sheets = scenes.filter(scene => scene.anim).length;
+    const images = scenes.length + sheets;
+    console.log(`그림 계획 · ${format} · 장면 그림 ${scenes.length}장 + 시트 ${sheets}장 = ${images}장.`);
+    if (images > 30) console.warn('경고 · 그림이 이 편·이 크기의 권장 상한 30장을 넘는다.');
+  }
   // 0.1.0 작업 폴더(art/<id>.png)의 그림은 처음 art/wide/를 만들 때 그리로 옮긴다
   const legacy = story.scenes.map(scene => path.join(ep, 'art', `${scene.id}.png`)).filter(file => existsSync(file));
   if (!values.anim && format === 'wide' && !existsSync(dir) && legacy.length) {
@@ -199,7 +299,9 @@ async function main() {
 
   const only = values.only?.split(',').map(id => id.trim());
   if (only?.some(id => !story.scenes.some(scene => scene.id === id))) throw new Error('--only에 없는 장면 id가 있다.');
-  const items = scenes.filter(scene => !only || only.includes(scene.id))
+  const selected = scenes.filter(scene => !only || only.includes(scene.id));
+  if (engine === 'local') return localArt({ ep, story, scenes: selected, format, dir, values, retries });
+  const items = selected
     .filter(scene => !values.anim || scene.anim)
     .map(scene => {
       const anim = values.anim ? scene.anim : undefined;
