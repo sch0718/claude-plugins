@@ -6,6 +6,7 @@ import { artPath, NARR, buildTimeline, FORMATS, FPS, PACES, selectVoices, speech
 import { dur, estimate, loadEnv, overFree, speak, voiceFile } from './tts.mjs';
 import { captionLayout, cutsceneMode, kenBurns, mixSfx, panelInputs, placeholder, renderPanel,
   resolveScenes, sceneFade, validateCutscene, videoEncoding } from './cutscene.mjs';
+import { motionInputs, motionMode, renderMotion, validateMotion } from './keyframes.mjs';
 
 const readJson = file => JSON.parse(readFileSync(file, 'utf8'));
 const mtime = file => statSync(file, { throwIfNoEntry: false })?.mtimeMs ?? -Infinity;
@@ -159,8 +160,10 @@ async function makeMp4(output, args) {
   }
 }
 
-async function makeScene({ scene, storyScene, index, ep, formatName, art, output }, cutscene) {
-  if (cutscene) return renderPanel({ scene, storyScene, index, ep, formatName, art, output });
+async function makeScene(item, cutscene, motion) {
+  if (motion) return renderMotion(item);
+  if (cutscene) return renderPanel(item);
+  const { scene, index, formatName, art, output } = item;
   const format = FORMATS[formatName];
   const frames = Math.round(scene.dur * FPS);
   if (frames < 1) throw new Error(`${scene.id}의 길이가 한 프레임보다 짧다.`);
@@ -219,11 +222,11 @@ async function joinVideo(output, audio, clips, force) {
   }
 }
 
-function visualInputs(item, storyFile, timelinePath, cutscene) {
+function visualInputs(item, storyFile, timelinePath, cutscene, motion) {
   const { ep, art } = item;
   const inputs = [storyFile, timelinePath, script('build.mjs'), script('lib.mjs'), script('cutscene.mjs')];
-  if (cutscene) {
-    const { ready, manifest, files } = panelInputs(item);
+  if (cutscene || motion) {
+    const { ready, manifest, files } = motion ? motionInputs(item) : panelInputs(item);
     return { ready: ready && sameText(item.inputsFile, JSON.stringify(manifest)), files: [...inputs, ...files] };
   }
   const dir = path.dirname(art);
@@ -242,15 +245,23 @@ async function videoStages(ep, out, storyFile, story, formatName, stage, { jobs,
   }
   const timeline = readJson(timelinePath);
   const cutscene = cutsceneMode(story);
+  const motion = motionMode(story);
   const source = new Map(resolveScenes(story).map(scene => [scene.id, scene]));
   const dir = path.join(out, formatName);
   const scenesDir = path.join(dir, 'scenes');
-  const items = timeline.scenes.map((scene, index) => ({
-    scene, storyScene: source.get(scene.id), index, ep, formatName, art: artPath(ep, formatName, scene.art),
-    video: path.join(scenesDir, `${scene.id}.mp4`), inputsFile: path.join(scenesDir, `${scene.id}.inputs.json`),
-  }));
+  const items = timeline.scenes.map((scene, index) => {
+    const item = {
+      scene, storyScene: source.get(scene.id), index, ep, formatName, art: artPath(ep, formatName, scene.art),
+      video: path.join(scenesDir, `${scene.id}.mp4`), inputsFile: path.join(scenesDir, `${scene.id}.inputs.json`),
+    };
+    if (!motion) return item;
+    const following = timeline.scenes[index + 1];
+    const nextArt = following && artPath(ep, formatName, following.art);
+    return { ...item, first: index === 0, last: !following, interp: story.style.interp ?? 'fade',
+      next: following ? { art: existsSync(nextArt) ? nextArt : null, dur: following.dur, kb: following.kb } : null };
+  });
   const sceneFresh = item => {
-    const { ready, files } = visualInputs(item, storyFile, timelinePath, cutscene);
+    const { ready, files } = visualInputs(item, storyFile, timelinePath, cutscene, motion);
     return ready && fresh(item.video, files);
   };
   const mixedAudio = () => mixSfx({ timeline, story, ep, audio, outDir: dir });
@@ -264,8 +275,8 @@ async function videoStages(ep, out, storyFile, story, formatName, stage, { jobs,
         console.log(`${item.scene.id} 기존 장면을 쓴다.`);
         return;
       }
-      const manifest = await makeScene({ ...item, output: item.video }, cutscene);
-      if (cutscene) save(item.inputsFile, JSON.stringify(manifest));
+      const manifest = await makeScene({ ...item, output: item.video }, cutscene, motion);
+      if (cutscene || motion) save(item.inputsFile, JSON.stringify(manifest));
       else rmSync(item.inputsFile, { force: true });
       console.log(`${item.scene.id} 장면을 만들었다.`);
     });
@@ -354,7 +365,10 @@ async function main() {
   const storyFile = path.join(ep, 'story.json');
   const story = validateStory(readJson(storyFile));
   const format = storyFormat(story, values.format);
-  if (['visual', 'finish', 'all'].includes(stage)) validateCutscene(story);
+  if (['visual', 'finish', 'all'].includes(stage)) {
+    validateCutscene(story);
+    validateMotion(story);
+  }
   mkdirSync(out, { recursive: true });
 
   if (['voice', 'timeline', 'all'].includes(stage)) {

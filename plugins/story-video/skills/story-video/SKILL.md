@@ -1,13 +1,13 @@
 ---
 name: story-video
-description: 이야기(창작, 인터넷 커뮤니티의 유명한 이야기, 요즘 화제인 이야기, 민담·도시전설·실제 사건)를 기승전결 영상(가로 5~10분 또는 세로 쇼츠 3분 이하)으로 끝까지 만든다. 수집 → 고르기 → 구성 → 대본 → 낭독 → 낭독 검증 → 화면 → 마무리·검토 여덟 단계를 차례로 부르는 순서표다(story-collect·story-select·story-outline·story-script·story-voice·story-voice-check·story-visual·story-finish). 긴 이야기는 여러 편으로 나눈다. "이 이야기로 영상 만들어줘", "썰 영상", "괴담 영상", "요즘 화제인 이야기 영상으로", "창작 이야기 영상", "이야기 쇼츠" 같은 요청에 쓴다. 게임·앱 소개 영상은 narrated-video를 쓴다.
+description: 이야기(창작, 인터넷 커뮤니티의 유명한 이야기, 요즘 화제인 이야기, 민담·도시전설·실제 사건)를 기승전결 영상(가로 5~10분, 세로 쇼츠 3분 이하 또는 세로 10분)으로 끝까지 만든다. 수집 → 고르기 → 구성 → 대본 → 낭독 → 낭독 검증 → 화면 → 마무리·검토 여덟 단계를 차례로 부르는 순서표다(story-collect·story-select·story-outline·story-script·story-voice·story-voice-check·story-visual·story-finish). 일반 쇼츠에서 긴 이야기는 여러 편으로 나눈다. "이 이야기로 영상 만들어줘", "썰 영상", "괴담 영상", "요즘 화제인 이야기 영상으로", "창작 이야기 영상", "이야기 쇼츠" 같은 요청에 쓴다. 게임·앱 소개 영상은 narrated-video를 쓴다.
 ---
 
 # 이야기 영상 한 편 만들기 (순서표)
 
 이 플러그인 폴더(`<플러그인>`)는 `${CLAUDE_PLUGIN_ROOT}`다. 값이 비어 있으면 이 스킬의 기본 폴더(Base directory)에서 두 단계 위(`../..`)가 플러그인 폴더다. 스크립트는 `<플러그인>/scripts/`에 있다.
 
-필요한 것: Node.js 22 이상, ffmpeg·ffprobe, `uv`(자막 그림용 Pillow, 음성 인식용 faster-whisper), 그림을 그리려면 Codex CLI(`codex`, 이미지 생성이 되는 계정). 음성은 최종본에 VoiceStudio 앱(로컬), 임시판에 macOS `say`를 쓴다.
+필요한 것: Node.js 22 이상, ffmpeg·ffprobe, `uv`(자막 그림용 Pillow, 음성 인식용 faster-whisper), 그림을 그리려면 Codex CLI(`codex`, 이미지 생성이 되는 계정) 또는 mflux와 로컬 모델. 음성은 최종본에 VoiceStudio 앱(로컬), 임시판에 macOS `say`를 쓴다.
 
 ## 순서
 
@@ -21,15 +21,17 @@ description: 이야기(창작, 인터넷 커뮤니티의 유명한 이야기, �
 | 4 | `story-script` | 해설·대사·연기 지시 | `story.json`의 `lines` → `check.mjs ep01` | Opus 5.5 (이 세션) |
 | 5 | `story-voice` | 배역 검사·낭독 | `cast.mjs ep01` → `build.mjs ep01 voice` → `voice/`, `out/timeline.json`, `out/voice-cast.md` | VoiceStudio(임시판은 say) |
 | 6 | `story-voice-check` | 음성 인식으로 대조, 오독 다시 만들기, 목소리 일관성 검사 | `voicecheck.mjs ep01` → `out/voice-check.md` | 로컬 faster-whisper |
-| 7 | `story-visual` | 화풍 선택, 장면 그림과 움직임 영상. 쇼츠는 컷씬 모드 권장 | `art.mjs ep01` → `contact.jpg` 확인, 컷씬 시트는 `art.mjs ep01 --anim`, `build.mjs ep01 visual` | Codex `gpt-6.2-sol` 이미지 생성, ffmpeg |
+| 7 | `story-visual` | 화풍 선택, 장면 그림과 움직임 영상. 쇼츠는 컷씬 모드 권장 | `art.mjs ep01` → `contact.jpg` 확인, 컷씬 시트는 `art.mjs ep01 --anim`, `build.mjs ep01 visual` | Codex `gpt-6.2-sol` 또는 로컬 모델, ffmpeg |
 | 8 | `story-finish` | 자막 입히기, 기계 확인, 원본과 비교 검토 | `build.mjs ep01 finish`, `check.mjs ep01 --frames …`, `review.md` | ffmpeg, 이 세션 |
 | 9 | 올리기 | narrated-video 스킬의 「업로드」 절. 각색이면 slug 폴더 `desc.txt`의 고지 문장을 설명란에 넣고 원문 출처 URL은 넣지 않는다 | | |
 
 - **2 뒤에 반드시 멈춘다.** 순위표(어디서·언제 찾은 소재인지, 두세 문장 요약, 신선함·반전 포인트, 점수)를 사용자에게 보여 주고, 사용자가 고르기 전에는 구성·대본으로 넘어가지 않는다. 하위 세션이면 표를 보고하고 기다린다.
 - 4와 5 사이에 사용자에게 대본(장면별 문장·연기 지시)을 보여 주고 고칠 곳을 받는다. 대본이 굳으면 `cast.mjs ep01`로 후보와 배정을 확인한 뒤 음성을 만든다.
+- 컷씬과 motion의 화면 설정은 구성·대본 단계에서 시간표를 만들기 전에 확정한다. 로컬 그림은 다른 mflux 작업이 끝난 뒤 그린다.
 - 7의 그림 그리기는 대본이 굳으면 5·6과 따로 돌려도 된다(Codex와 VoiceStudio는 서로 다른 자원을 쓴다). 움직임 영상(`visual`)은 시간표가 있어야 한다.
 - 시범으로 빨리 볼 때: `build.mjs ep01 all --provider say`(say 음성, 그림이 없으면 단색 자리 그림).
-- 쇼츠도 만들 때: 같은 `story.json`으로 `art.mjs ep01 --format shorts`, `build.mjs ep01 visual --format shorts`, `finish --format shorts`. 음성·시간표는 같이 쓴다. 쇼츠는 3분 이하여야 하므로 구성 단계에서 편을 그 길이로 나눈다.
+- 일반 쇼츠도 만들 때는 같은 `story.json`으로 `art.mjs ep01 --format shorts`, `build.mjs ep01 visual --format shorts`, `finish --format shorts`를 실행한다. 음성·시간표는 같이 쓴다. 일반 쇼츠는 편당 3분 이하다. 구성 단계에서 그 길이로 나눈다.
+- 10분 세로는 `"format": "shorts"`와 `"pace": "normal"`을 쓰고 540~660초 한 편으로 짠다. `node scripts/check.mjs ep01 --min 540 --max 660`으로 길이를 확인한다(플러그인 폴더 기준).
 
 ## 목소리 규칙 요약
 
@@ -39,7 +41,7 @@ description: 이야기(창작, 인터넷 커뮤니티의 유명한 이야기, �
 
 ## 긴 이야기를 쇼츠 시리즈로
 
-`story-outline`에서 편 수와 편별 기승전결을 정하고 `ep01/`부터 `epNN/`까지 폴더를 둔다. 한 편의 대본부터 마무리 검토까지 끝낸 뒤 다음 편으로 넘어간다. 여러 편을 동시에 돌리지 않는다. 게임 컷씬식의 화면 설정은 구성·대본 단계에서 시간표를 만들기 전에 쓴다.
+일반 쇼츠를 여러 편으로 만들 때 `story-outline`에서 편 수와 편별 기승전결을 정하고 `ep01/`부터 `epNN/`까지 폴더를 둔다. 한 편의 대본부터 마무리 검토까지 끝낸 뒤 다음 편으로 넘어간다. 여러 편을 동시에 돌리지 않는다.
 
 ## 작업 폴더 규약
 
@@ -49,7 +51,7 @@ description: 이야기(창작, 인터넷 커뮤니티의 유명한 이야기, �
 └── <slug>/
     ├── sources.md                                                    (2)
     └── ep01/
-        ├── story.json      뼈대·facts(3) → lines·direction(4) → 그림 방식(7, 컷씬 설정은 3·4)
+        ├── story.json      뼈대·facts(3) → lines·direction(4) → 그림 방식(7, 컷씬·motion 설정은 3·4)
         ├── voice/          문장 음성 캐시                              (5·6)
         ├── sfx/            효과음(게임 컷씬식, 있으면)                  (7)
         ├── art/<format>/   장면 그림, contact.jpg, prompts/, logs/     (7)

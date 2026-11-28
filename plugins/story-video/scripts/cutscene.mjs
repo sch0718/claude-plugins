@@ -42,6 +42,12 @@ export function validateStyle(style) {
   if (Object.hasOwn(style, 'prompt') && typeof style.prompt !== 'string') {
     throw new Error('style.prompt는 문자열이어야 한다.');
   }
+  if (Object.hasOwn(style, 'engine') && !['codex', 'local'].includes(style.engine)) {
+    throw new Error('style.engine에는 codex 또는 local을 쓴다.');
+  }
+  if (Object.hasOwn(style, 'interp') && !['fade', 'mci'].includes(style.interp)) {
+    throw new Error('style.interp에는 fade 또는 mci를 쓴다.');
+  }
 }
 
 const integer = (value, low, high) => Number.isInteger(value) && value >= low && value <= high;

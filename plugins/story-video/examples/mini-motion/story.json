@@ -1,0 +1,160 @@
+{
+  "title": "마지막 버스의 우산",
+  "slug": "last-bus-umbrella",
+  "episode": 1,
+  "episodes": 1,
+  "format": "wide",
+  "style": {
+    "mode": "motion",
+    "engine": "local",
+    "preset": "photoreal"
+  },
+  "characters": [
+    {
+      "id": "jun",
+      "name": "준",
+      "look": "a tired young man in his late twenties, short black hair, round glasses, navy raincoat, carrying a backpack"
+    },
+    {
+      "id": "driver",
+      "name": "기사님",
+      "look": "a kind bus driver in his sixties, grey hair under a dark cap, light blue uniform shirt, deep smile lines"
+    }
+  ],
+  "facts": [
+    "자정이 넘은 비 오는 밤, 준은 우산이 없다",
+    "막차 기사님이 10년째 아무도 찾아가지 않은 낡은 노란 우산을 준다",
+    "우산 안쪽 이름표의 글씨는 준의 아버지 글씨다",
+    "다음 날 저녁 준은 캔커피를 들고 같은 정류장에서 우산을 돌려주려 기다린다"
+  ],
+  "voices": {
+    "narr": {
+      "provider": "vstudio",
+      "model": "omnivoice",
+      "id": "36b0f26b",
+      "seed": 7
+    },
+    "jun": {
+      "provider": "vstudio",
+      "model": "omnivoice",
+      "id": "508aba44",
+      "seed": 21
+    },
+    "driver": {
+      "provider": "vstudio",
+      "model": "omnivoice",
+      "id": "f79deb61",
+      "seed": 41
+    }
+  },
+  "scenes": [
+    {
+      "id": "s01",
+      "beat": "기",
+      "cast": [
+        "jun"
+      ],
+      "kb": "in",
+      "art": "A nearly empty city bus stop at midnight in heavy rain. The young man stands alone under a broken streetlight, soaked, no umbrella, looking at his phone.",
+      "lines": [
+        {
+          "who": "narr",
+          "t": "자정이 넘은 시각, 비는 그칠 생각이 없었다.",
+          "direction": "비 내리는 한밤 정류장을 처음 보여 주며 담담하게, 조금 천천히",
+          "direction_en": "Calm and measured, a little slow, opening on a rainy midnight bus stop"
+        },
+        {
+          "who": "jun",
+          "t": "우산도 없는데, 막차까지 놓치면 끝이야.",
+          "direction": "혼자 중얼거린다. 지치고 초조해서 한숨 섞인 낮은 목소리, 조용히",
+          "direction_en": "Muttering to himself, tired and anxious, low voice with a sigh, quietly"
+        }
+      ],
+      "keys": [
+        "He lifts his gaze from the phone toward the road, keeping his shoulders still."
+      ]
+    },
+    {
+      "id": "s02",
+      "beat": "승",
+      "cast": [
+        "jun",
+        "driver"
+      ],
+      "kb": "right",
+      "art": "Interior of a dim late-night bus. The old driver turns slightly to hand a worn yellow umbrella over the fare box to the wet young man.",
+      "lines": [
+        {
+          "who": "narr",
+          "t": "마지막 버스가 섰고, 기사님이 낡은 노란 우산을 내밀었다.",
+          "direction": "버스가 서는 순간을 따뜻하게, 보통 빠르기로",
+          "direction_en": "Warm, at a normal pace, as the last bus pulls up"
+        },
+        {
+          "who": "driver",
+          "t": "10년째 아무도 안 찾아간 우산이에요.",
+          "say": "십 년째 아무도 안 찾아간 우산이에요.",
+          "direction": "젖은 청년에게 우산을 건네며 웃는다. 느긋하고 다정한 말투, 천천히",
+          "direction_en": "Smiling as he hands the umbrella to the soaked young man, easygoing and kind, slow"
+        },
+        {
+          "who": "driver",
+          "t": "가져가요.",
+          "direction": "우산을 손에 쥐여 주며 짧게, 정 많은 할아버지처럼 부드럽게",
+          "direction_en": "Short and gentle like a kind old man, pressing the umbrella into his hand"
+        }
+      ],
+      "keys": [
+        "The driver extends the umbrella a little farther over the fare box."
+      ]
+    },
+    {
+      "id": "s03",
+      "beat": "전",
+      "cast": [
+        "jun"
+      ],
+      "kb": "out",
+      "art": "Close view of the young man opening the worn yellow umbrella under a streetlight; inside the canopy a faded small paper tag is tied to a rib. Rain sparkles in amber light.",
+      "lines": [
+        {
+          "who": "narr",
+          "t": "집 앞에서 우산을 펴자, 안쪽에 빛바랜 이름표가 매달려 있었다.",
+          "direction": "집 앞에서 우산을 펴는 순간. 궁금증을 끌어올리며 낮게",
+          "direction_en": "Low and building curiosity as he opens the umbrella at his door"
+        },
+        {
+          "who": "jun",
+          "t": "이 글씨, 아버지 글씨잖아.",
+          "direction": "이름표를 보고 숨이 멎는다. 놀라서 떨리는 목소리, 속삭이듯 천천히",
+          "direction_en": "Stunned at the name tag, trembling with shock, whispering slowly"
+        }
+      ],
+      "keys": []
+    },
+    {
+      "id": "s04",
+      "beat": "결",
+      "cast": [
+        "jun"
+      ],
+      "kb": "left",
+      "art": "Next evening, clear sky after the rain. The young man waits at the same bus stop holding a small bag of warm canned coffee, the yellow umbrella folded under his arm, a gentle smile.",
+      "lines": [
+        {
+          "who": "narr",
+          "t": "다음 날 저녁, 준은 따뜻한 캔커피를 들고 같은 정류장에 섰다.",
+          "direction": "다음 날 저녁의 맑은 공기처럼 밝고 따뜻하게",
+          "direction_en": "Bright and warm like the clear air of the next evening"
+        },
+        {
+          "who": "jun",
+          "t": "이번엔 제가 돌려드릴 차례네요.",
+          "direction": "버스를 기다리며 혼잣말처럼. 설레고 고마운 마음, 미소 띤 목소리",
+          "direction_en": "Like talking to himself while waiting, excited and grateful, smiling voice"
+        }
+      ],
+      "keys": []
+    }
+  ]
+}
