@@ -70,6 +70,7 @@ export function keyPlan(frames, count)                       // → { used, chan
 export const tailFrames = frames => Math.min(FPS, Math.floor(frames / 2));
 export function motionCamera(frames, kb, { w, h })           // zoompan 필터 문자열(d=1, 비디오 입력용). in 1→1.05, out 1.05→1, left/right 1.05 고정 옆 이동, 그 밖은 in
 export function motionInputs(item)                           // → { ready, manifest, files } (panelInputs와 같은 모양)
+export async function motionArgs(item, tmp)                // ffmpeg 입력·필터 인자(출력·인코딩 제외). 시험은 이것으로 인코딩 전 rawvideo를 뽑는다
 export async function renderMotion(item)                     // 장면 mp4를 item.output에 쓰고 manifest 반환
 ```
 
